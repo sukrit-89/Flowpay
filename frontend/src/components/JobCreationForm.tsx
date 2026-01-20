@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
+import { useContracts } from '../hooks/useContracts';
 
 interface JobCreationFormProps {
-    onSubmit: () => void;
+    onSubmit: (hash?: string) => void;
 }
 
 export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
@@ -10,10 +12,46 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
     const [totalAmount, setTotalAmount] = useState('');
     const [milestones, setMilestones] = useState(1);
     const [payoutCurrency, setPayoutCurrency] = useState<'USDC' | 'INR'>('USDC');
+    const [assetAddress] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'); // Native XLM for now
 
-    const handleSubmit = () => {
-        // TODO: Call smart contract
-        onSubmit();
+    const { address, connected } = useWallet();
+    const { createJob, loading, error } = useContracts();
+
+    const handleSubmit = async () => {
+        if (!connected || !address) {
+            alert('Please connect your wallet first');
+            return;
+        }
+
+        if (!jobTitle || !freelancerAddress || !totalAmount) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        try {
+            const result = await createJob(
+                address, // client address
+                freelancerAddress,
+                parseFloat(totalAmount),
+                assetAddress,
+                milestones
+            );
+
+            if (result.success) {
+                alert(`Job created successfully! Transaction hash: ${result.hash}`);
+                onSubmit(result.hash);
+
+                // Reset form
+                setJobTitle('');
+                setFreelancerAddress('');
+                setTotalAmount('');
+                setMilestones(1);
+            } else {
+                alert(`Failed to create job: ${result.error}`);
+            }
+        } catch (err: any) {
+            alert(`Error: ${err.message}`);
+        }
     };
 
     return (
@@ -28,6 +66,12 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                 </button>
             </div>
 
+            {error && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-sm">
+                    {error}
+                </div>
+            )}
+
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm mb-2">Job Title</label>
@@ -37,6 +81,7 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                         onChange={(e) => setJobTitle(e.target.value)}
                         placeholder="Job Title"
                         className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                        disabled={loading}
                     />
                 </div>
 
@@ -46,26 +91,31 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                         type="text"
                         value={freelancerAddress}
                         onChange={(e) => setFreelancerAddress(e.target.value)}
-                        placeholder="Freelancer Stellar Address"
+                        placeholder="G..."
                         className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                        disabled={loading}
                     />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm mb-2">Total Amount</label>
+                        <label className="block text-sm mb-2">Total Amount (XLM)</label>
                         <input
                             type="number"
                             value={totalAmount}
                             onChange={(e) => setTotalAmount(e.target.value)}
-                            placeholder="Total Amount"
+                            placeholder="100"
                             className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                            disabled={loading}
                         />
                     </div>
                     <div>
                         <label className="block text-sm mb-2">Asset</label>
-                        <select className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500">
-                            <option>OUSG, etc.</option>
+                        <select
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                            disabled={loading}
+                        >
+                            <option>Native XLM</option>
                         </select>
                     </div>
                 </div>
@@ -77,8 +127,9 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                             <button
                                 key={num}
                                 onClick={() => setMilestones(num)}
+                                disabled={loading}
                                 className={`flex-1 py-2 rounded-lg font-medium ${milestones === num ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400'
-                                    }`}
+                                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {num}
                             </button>
@@ -92,8 +143,9 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                         <span className={payoutCurrency === 'USDC' ? 'text-white' : 'text-gray-400'}>USDC</span>
                         <button
                             onClick={() => setPayoutCurrency(prev => prev === 'USDC' ? 'INR' : 'USDC')}
+                            disabled={loading}
                             className={`w-14 h-7 rounded-full relative transition-colors ${payoutCurrency === 'INR' ? 'bg-blue-500' : 'bg-gray-600'
-                                }`}
+                                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <div className={`absolute w-5 h-5 bg-white rounded-full top-1 transition-transform ${payoutCurrency === 'INR' ? 'translate-x-8' : 'translate-x-1'
                                 }`}></div>
@@ -104,9 +156,13 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
 
                 <button
                     onClick={handleSubmit}
-                    className="w-full bg-blue-500 hover:bg-blue-600 py-3 rounded-lg font-medium"
+                    disabled={loading || !connected}
+                    className={`w-full py-3 rounded-lg font-medium ${loading || !connected
+                            ? 'bg-gray-600 cursor-not-allowed'
+                            : 'bg-blue-500 hover:bg-blue-600'
+                        }`}
                 >
-                    Submit Job to Chain
+                    {loading ? 'Submitting to Chain...' : connected ? 'Submit Job to Chain' : 'Connect Wallet First'}
                 </button>
             </div>
         </div>

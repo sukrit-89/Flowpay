@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useWallet } from '../hooks/useWallet';
 
 export default function Landing() {
     const navigate = useNavigate();
+    const { address, connected, connect, disconnect, isFreighterInstalled, error } = useWallet();
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center px-4">
@@ -13,13 +15,39 @@ export default function Landing() {
                     </div>
                     <span className="text-xl font-semibold">FlowPay</span>
                 </div>
-                <div className="flex gap-6">
+                <div className="flex gap-6 items-center">
                     <a href="#" className="text-gray-400 hover:text-white">Docs</a>
-                    <a href="#" className="text-gray-400 hover:text-white">Github</a>
-                    <button className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-medium">
-                        Launch App
-                    </button>
+                    <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white">Github</a>
+                    {connected ? (
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-400">
+                                {address.slice(0, 6)}...{address.slice(-4)}
+                            </span>
+                            <button
+                                onClick={disconnect}
+                                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-medium text-sm"
+                            >
+                                Disconnect
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={connect}
+                            disabled={!isFreighterInstalled}
+                            className={`px-6 py-2 rounded-lg font-medium ${!isFreighterInstalled
+                                    ? 'bg-red-500 hover:bg-red-600'
+                                    : 'bg-blue-500 hover:bg-blue-600'
+                                }`}
+                        >
+                            {!isFreighterInstalled ? 'Install Freighter' : 'Connect Wallet'}
+                        </button>
+                    )}
                 </div>
+                {error && (
+                    <div className="absolute top-20 right-6 bg-red-500/20 border border-red-500 rounded-lg p-3 text-red-300 text-sm max-w-xs">
+                        {error}
+                    </div>
+                )}
             </nav>
 
             {/* Hero Section */}

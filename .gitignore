@@ -9,6 +9,9 @@ build/
 target/
 *.wasm
 
+# Rust
+Cargo.lock
+
 # IDE
 .vscode/
 .idea/
@@ -22,8 +25,11 @@ Thumbs.db
 
 # Environment variables
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
+
+# Auto-generated
+vite-env.d.ts
 
 # Logs
 *.log

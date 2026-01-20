@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 
 interface TransactionModalProps {
+    hash?: string;
     onClose: () => void;
 }
 
-export default function TransactionModal({ onClose }: TransactionModalProps) {
+export default function TransactionModal({ hash, onClose }: TransactionModalProps) {
     const [currentStep, setCurrentStep] = useState(1);
 
     useEffect(() => {
@@ -14,10 +15,14 @@ export default function TransactionModal({ onClose }: TransactionModalProps) {
         return () => clearInterval(timer);
     }, []);
 
+    const explorerUrl = hash
+        ? `https://stellar.expert/explorer/testnet/tx/${hash}`
+        : '#';
+
     const steps = [
-        { id: 1, title: 'Escrow created', subtitle: 'Vault provisioned on Stellar', block: '#12345678' },
-        { id: 2, title: 'Proof submitted', subtitle: 'ZK-SNARK identity verified', block: '#12345679' },
-        { id: 3, title: 'Payment processing', subtitle: 'Validating on-chain liquidity...', block: '#12345680' },
+        { id: 1, title: 'Escrow created', subtitle: 'Vault provisioned on Stellar', block: hash },
+        { id: 2, title: 'Proof submitted', subtitle: 'ZK-SNARK identity verified', block: hash },
+        { id: 3, title: 'Payment processing', subtitle: 'Validating on-chain liquidity...', block: hash },
         { id: 4, title: 'Payment complete', subtitle: 'Awaiting finality', block: null },
     ];
 
@@ -25,7 +30,7 @@ export default function TransactionModal({ onClose }: TransactionModalProps) {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-8 max-w-3xl w-full">
                 <h2 className="text-3xl font-bold mb-2">FlowPay</h2>
-                <div className="text-sm text-gray-400 mb-8">TRANSACTION STATUS</div>
+                <div className="text-sm text-gray-400 mb-8"> TRANSACTION STATUS</div>
 
                 <div className="grid grid-cols-2 gap-8">
                     {/* Timeline */}
@@ -49,7 +54,7 @@ export default function TransactionModal({ onClose }: TransactionModalProps) {
                                     <div className="text-sm text-gray-400">{step.subtitle}</div>
                                     {step.block && (
                                         <div className="text-xs text-blue-400 mt-1">
-                                            Block: {step.block} <span className="underline cursor-pointer">(View)</span>
+                                            Hash: {step.block.slice(0, 8)}... <a href={explorerUrl} target="_blank" rel="noreferrer" className="underline cursor-pointer">(View)</a>
                                         </div>
                                     )}
                                 </div>
@@ -61,20 +66,21 @@ export default function TransactionModal({ onClose }: TransactionModalProps) {
                     <div className="space-y-4">
                         <div>
                             <div className="text-sm text-gray-400 mb-1">TRANSACTION HASH</div>
-                            <div className="font-mono text-sm">
-                                0x71C...3a42
-                                <span className="text-blue-400 ml-2 cursor-pointer">(Copy, Link)</span>
+                            <div className="font-mono text-sm break-all">
+                                {hash ? `${hash.slice(0, 16)}...${hash.slice(-8)}` : 'N/A'}
+                                {hash && <a href={explorerUrl} target="_blank" rel="noreferrer" className="text-blue-400 ml-2 cursor-pointer">(View)</a>}
                             </div>
                         </div>
                         <div>
                             <div className="text-sm text-gray-400 mb-1">NETWORK</div>
-                            <div>Polygon Mainnet</div>
+                            <div>Stellar Testnet</div>
                         </div>
                         <div>
-                            <div className="text-sm text-gray-400 mb-1">BLOCK HEIGHT</div>
+                            <div className="text-sm text-gray-400 mb-1">VIEW EXPLORER</div>
                             <div>
-                                #12345680
-                                <span className="text-blue-400 ml-2 cursor-pointer">(View)</span>
+                                <a href={explorerUrl} target="_blank" rel="noreferrer" className="text-blue-400 cursor-pointer hover:underline">
+                                    View on Stellar Expert ↗
+                                </a>
                             </div>
                         </div>
                         <div>

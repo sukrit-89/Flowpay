@@ -57,7 +57,13 @@ impl EscrowCore {
     ) -> BytesN<32> {
         client.require_auth();
         
-        let job_id = env.crypto().sha256(&env.ledger().sequence().to_be_bytes());
+        let sequence = env.ledger().sequence();
+        let timestamp = env.ledger().timestamp();
+        let mut id_data = soroban_sdk::Bytes::new(&env);
+        id_data.append(&soroban_sdk::Bytes::from_slice(&env, &sequence.to_be_bytes()));
+        id_data.append(&soroban_sdk::Bytes::from_slice(&env, &timestamp.to_be_bytes()));
+        let hash = env.crypto().sha256(&id_data);
+        let job_id: BytesN<32> = hash.try_into().unwrap();
         let amount_per_milestone = total_amount / milestone_count as i128;
         
         let mut milestones = Vec::new(&env);
