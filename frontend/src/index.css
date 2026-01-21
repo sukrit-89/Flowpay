@@ -2,9 +2,161 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-[#0a0e17] text-gray-50;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+:root {
+  /* Yieldra - Dark Teal Accent Theme */
+
+  /* Backgrounds */
+  --bg-primary: #090C10;
+  --bg-card: #0F172A;
+
+  /* Accent Colors */
+  --accent-primary: #14B8A6;
+  --accent-glow: #5EEAD4;
+
+  /* Text */
+  --text-primary: #E2E8F0;
+  --text-muted: #94A3B8;
+
+  /* Status Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+/* Custom Animations */
+@keyframes gradient-flow {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
   }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(94, 234, 212, 0.6);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.gradient-flow {
+  background-size: 200% 200%;
+  animation: gradient-flow 15s ease infinite;
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.glow-teal {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(20, 184, 166, 0.1);
+}
+
+/* Gradient text */
+.gradient-text-teal {
+  background: linear-gradient(135deg, #14B8A6 0%, #5EEAD4 50%, #2DD4BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090C10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #14B8A6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5EEAD4;
+}
+
+body {
+  @apply bg-[#090C10] text-[#E2E8F0];
+}
+
+/* Card styles */
+.card {
+  background: #0F172A;
+  border: 1px solid rgba(20, 184, 166, 0.1);
+}
+
+.card-hover:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(20, 184, 166, 0.3);
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #14B8A6, #0D9488);
+  color: white;
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.4);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0D9488, #0F766E);
+  box-shadow: 0 6px 20px rgba(94, 234, 212, 0.6);
+}
+
+.btn-secondary {
+  border: 1px solid #14B8A6;
+  color: #14B8A6;
+  background: transparent;
+}
+
+.btn-secondary:hover {
+  background: rgba(20, 184, 166, 0.1);
+  border-color: #5EEAD4;
 }

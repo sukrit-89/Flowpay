@@ -1,413 +1,243 @@
-<div align="center">
+# Yieldra - Yield-Powered Freelance Escrow on Stellar
 
-# 💸 FlowPay
+## 💰 What is Yieldra?
 
-**Next-Generation Decentralized Payroll Infrastructure on Stellar**
+**Yieldra** is the first yield-generating freelance payment platform built on Stellar blockchain. Unlike traditional escrow services where funds sit idle, Yieldra automatically invests escrowed funds into **Real World Assets (RWA)** like OUSG (tokenized US Treasury bonds) to generate **5% APY** while your project is in progress.
 
-[![Stellar](https://img.shields.io/badge/Stellar-Blockchain-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.org)
-[![Soroban](https://img.shields.io/badge/Soroban-Smart%20Contracts-00ADD8?style=for-the-badge)](https://soroban.stellar.org)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
+### Key Features
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Documentation](#-documentation)
-
-</div>
-
----
-
-## 🌟 Overview
-
-**FlowPay** is a production-ready decentralized payroll protocol that revolutionizes freelance payments through blockchain technology. Built on Stellar's Soroban platform, FlowPay combines trustless escrow, Real-World Asset (RWA) yield generation, and instant cross-currency settlements to create a seamless payment experience for clients and freelancers worldwide.
-
-### Why FlowPay?
-
-- 🔒 **Trustless Escrow**: Smart contracts eliminate payment disputes and ensure fair compensation
-- 💰 **Earn While You Wait**: Generate 5%+ APY on locked funds through OUSG RWA integration
-- ⚡ **Lightning Fast**: Sub-5 second transaction finality on Stellar
-- 🌍 **Global Payments**: Automatic currency conversion (USDC → INR and more)
-- 📊 **Transparent**: On-chain proof of work verification via GitHub PRs or documents
-- 💎 **Low Cost**: Sub-cent transaction fees
+🔒 **Smart Escrow** - Milestone-based payments with blockchain security  
+💎 **Automatic Yield** - Earn 5% APY on escrowed funds via OUSG  
+🌍 **Multi-Currency** - Pay in XLM, USDC, or local currencies (INR, KES, NGN)  
+⚡ **Instant Settlement** - No bank delays, near-zero fees  
+🔐 **Trustless** - Smart contracts eliminate middleman risk  
 
 ---
 
-## ✨ Features
+## 🎨 Brand Identity
 
-### For Clients
-- **Smart Contract Job Creation**: Define milestones with automated release conditions
-- **Proof Verification**: Review GitHub PRs or uploaded documents before approving payments
-- **Multi-Milestone Support**: Break projects into 1-3 trackable milestones
-- **Real-Time Monitoring**: Dashboard showing all active jobs and completion status
-- **Cross-Currency Payments**: Pay in USDC, freelancer receives in INR (or other local currencies)
-
-### For Freelancers
-- **Guaranteed Payment**: Funds locked in escrow at job creation
-- **Passive Yield**: Earn RWA yield on locked payments while working
-- **Flexible Proof**: Submit GitHub PR links or document URLs as work proof
-- **Instant Withdrawals**: Claim approved payments in your preferred currency
-- **Portfolio Tracking**: View all assigned jobs and earnings history
-
-### Technical Features
-- **RWA Yield Harvester**: Integration with Ondo Finance OUSG tokens for yield generation
-- **Liquidity Router**: Automated currency conversion using Stellar DEX
-- **Proof of Work System**: On-chain verification of deliverables
-- **Wallet Integration**: Seamless Freighter wallet connectivity
-- **Responsive UI**: Beautiful dark mode interface optimized for all devices
+**Name**: Yieldra  
+**Tagline**: *"Earn while you pay"*  
+**Colors**: Dark theme with vibrant orange accents (#F97316)  
+**Logo**: Shield with upward growth arrow - representing security + yield growth
 
 ---
 
-## 📁 Project Structure
+## 🏗️ Architecture
 
-```
-flowpay/
-├── contracts/                           # Soroban Smart Contracts (Rust)
-│   ├── escrow_core/                     # Main escrow logic & milestone management
-│   │   ├── src/
-│   │   │   └── lib.rs                   # Core contract implementation
-│   │   └── Cargo.toml
-│   ├── rwa_yield_harvester/             # RWA yield calculation & OUSG integration
-│   │   ├── src/
-│   │   │   └── lib.rs                   # Yield harvesting logic
-│   │   └── Cargo.toml
-│   └── liquidity_router/                # Cross-currency conversion via Stellar DEX
-│       ├── src/
-│       │   └── lib.rs                   # Currency routing logic
-│       └── Cargo.toml
-├── frontend/                            # React Web Application
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Landing.tsx              # Landing page with wallet connection
-│   │   │   ├── ClientDashboard.tsx      # Client job management interface
-│   │   │   ├── FreelancerDashboard.tsx  # Freelancer job/earnings view
-│   │   │   ├── JobCreationForm.tsx      # Multi-step job creation wizard
-│   │   │   ├── TransactionModal.tsx     # Transaction status & confirmations
-│   │   │   └── ProofSubmission.tsx      # Work proof submission interface
-│   │   ├── hooks/
-│   │   │   └── useTransactions.ts       # Custom hook for blockchain interactions
-│   │   ├── lib/
-│   │   │   └── stellar.ts               # Stellar SDK utilities & contract IDs
-│   │   └── App.tsx
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md
-```
+Yieldra uses a three-layer smart contract system:
+
+1. **Escrow Core** - Manages jobs, milestones, and payments
+2. **Yield Harvester** - Automatically converts idle USDC → OUSG for yield generation
+3. **Liquidity Router** - Multi-currency support via Stellar DEX
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+- [Freighter Wallet](https://www.freighter.app/) browser extension
+- Stellar testnet account with XLM (get from [Friendbot](https://laboratory.stellar.org/#account-creator?network=test))
+- Node.js 18+ and npm
 
-Before you begin, ensure you have the following installed:
-
-- **Rust** (latest stable) - [Install Rust](https://rustup.rs/)
-- **Soroban CLI** - Install via `cargo install stellar-cli`
-- **Node.js** (v18+) - [Download Node.js](https://nodejs.org/)
-- **Freighter Wallet** - [Browser Extension](https://www.freighter.app/)
-
-### 1️⃣ Clone the Repository
+### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/sukrit-89/Flowpay.git
 cd Flowpay
-```
 
-### 2️⃣ Deploy Smart Contracts
-
-#### Build Contracts
-
-```bash
-# Build escrow_core
-cd contracts/escrow_core
-soroban contract build
-
-# Build rwa_yield_harvester
-cd ../rwa_yield_harvester
-soroban contract build
-
-# Build liquidity_router
-cd ../liquidity_router
-soroban contract build
-```
-
-#### Deploy to Testnet
-
-```bash
-# Add wasm32 target if not already added
-rustup target add wasm32-unknown-unknown
-
-# Deploy escrow_core
-soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/escrow_core.wasm \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet
-
-# Deploy rwa_yield_harvester
-soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/rwa_yield_harvester.wasm \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet
-
-# Deploy liquidity_router
-soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/liquidity_router.wasm \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet
-```
-
-> **Note**: Save the returned contract IDs - you'll need them for frontend configuration.
-
-### 3️⃣ Configure Frontend
-
-1. **Install dependencies:**
-
-```bash
+# Install frontend dependencies
 cd frontend
 npm install
-```
 
-2. **Update contract addresses** in `src/lib/stellar.ts`:
+# Configure environment (optional - testnet contracts already configured)
+cp .env.example .env
 
-```typescript
-export const CONTRACT_IDS = {
-  ESCROW_CORE: 'YOUR_DEPLOYED_ESCROW_CONTRACT_ID',
-  RWA_YIELD_HARVESTER: 'YOUR_DEPLOYED_YIELD_CONTRACT_ID',
-  LIQUIDITY_ROUTER: 'YOUR_DEPLOYED_ROUTER_CONTRACT_ID',
-};
-```
-
-3. **Start development server:**
-
-```bash
+# Start development server
 npm run dev
 ```
 
-4. **Open browser** and navigate to `http://localhost:5173`
+Visit http://localhost:3000
 
-### 4️⃣ Connect Wallet & Start Using
+### ✨ New Features
 
-1. Install Freighter wallet browser extension
-2. Create a testnet account or import existing one
-3. Fund your account via [Stellar Laboratory Friendbot](https://laboratory.stellar.org/#account-creator?network=test)
-4. Connect wallet on FlowPay landing page
-5. Start creating jobs (as client) or viewing assigned jobs (as freelancer)!
-
----
-
-## 🏗️ Architecture
-
-### Smart Contract Layer
-
-```mermaid
-graph LR
-    A[Client] -->|Create Job| B[Escrow Core]
-    C[Freelancer] -->|Submit Proof| B
-    B -->|Lock Funds| D[RWA Yield Harvester]
-    D -->|Generate Yield| E[OUSG Integration]
-    B -->|Convert Currency| F[Liquidity Router]
-    F -->|Execute Trade| G[Stellar DEX]
-    B -->|Release Payment| C
-```
-
-### User Flow
-
-#### Client Journey
-1. **Connect Wallet** → Freighter authentication
-2. **Create Job** → Define milestones, lock OUSG funds
-3. **Monitor Progress** → Track freelancer submissions
-4. **Approve Milestones** → Verify proof and release payments
-5. **Earn Yield** → Accumulate returns on locked funds
-
-#### Freelancer Journey
-1. **Connect Wallet** → Freighter authentication
-2. **View Jobs** → See all assigned contracts
-3. **Submit Proof** → Upload GitHub PR or document URL
-4. **Track Yield** → Monitor accumulated RWA returns
-5. **Claim Payment** → Withdraw in preferred currency (USDC/INR)
+- 🎨 **Modern Animated UI** - Smooth transitions with Framer Motion
+- 💾 **Wallet Persistence** - Auto-reconnect on page reload
+- 📊 **Live Statistics** - Animated counters and real-time updates
+- 🎯 **Improved Navigation** - Sleek sidebar with role-based menus
+- 🌈 **Gradient Effects** - Dynamic background animations
+- 📱 **Responsive Design** - Optimized for all screen sizes
 
 ---
 
-## 🔧 Smart Contract Details
+## 💡 How It Works
 
-### Escrow Core Contract
+### For Clients
 
-**Primary Functions:**
+1. **Create Job** - Post project details, budget, and milestones
+2. **Lock Funds** - Funds automatically deposited into yield-generating escrow
+3. **Earn Yield** - Your escrowed funds earn 5% APY in OUSG while waiting
+4. **Approve Work** - Review and approve completed milestones
+5. **Release Payment** - Freelancer gets paid + you keep the yield earned!
 
-| Function | Description | Parameters |
-|----------|-------------|------------|
-| `create_job()` | Initialize a new job with milestones | `client`, `freelancer`, `amount`, `milestones` |
-| `submit_proof()` | Submit work verification for milestone | `job_id`, `milestone_index`, `proof_url` |
-| `approve_milestone()` | Client approves and releases payment | `job_id`, `milestone_index` |
-| `get_job()` | Retrieve job details and status | `job_id` |
+### For Freelancers
 
-### RWA Yield Harvester Contract
-
-**Primary Functions:**
-
-| Function | Description | Parameters |
-|----------|-------------|------------|
-| `calculate_yield()` | Compute RWA yield based on time/principal | `principal`, `duration` |
-| `deposit_ousg()` | Deposit OUSG tokens for yield generation | `amount` |
-| `redeem_to_usdc()` | Convert OUSG to USDC (1:1 on testnet) | `ousg_amount` |
-
-### Liquidity Router Contract
-
-**Primary Functions:**
-
-| Function | Description | Parameters |
-|----------|-------------|------------|
-| `get_exchange_rate()` | Fetch current USDC → INR rate | `from_currency`, `to_currency` |
-| `convert_and_send()` | Auto-convert and transfer funds | `amount`, `to_currency`, `recipient` |
+1. **Browse Jobs** - Find projects matching your skills
+2. **Submit Proposals** - Apply with your rate and timeline
+3. **Deliver Work** - Complete milestones and submit proof
+4. **Get Paid** - Receive payment instantly in crypto
 
 ---
 
-## 🎨 Tech Stack
+## 💰 The Yield Advantage
 
-### Blockchain Layer
-- **Stellar Blockchain**: Fast, low-cost settlement layer
-- **Soroban Smart Contracts**: Rust-based smart contract platform
-- **WASM**: WebAssembly compilation target
-- **Ondo Finance OUSG**: Real-world asset yield generation
+**Example:** You create a 3-month project worth $10,000 USDC
 
-### Frontend Application
-- **React 18**: Modern component-based UI
-- **TypeScript**: Type-safe development
-- **Vite**: Lightning-fast build tool
-- **Tailwind CSS**: Utility-first styling framework
-- **React Router DOM**: Client-side routing
-- **Stellar SDK**: Blockchain interaction library
+| Traditional Escrow | Yieldra |
+|-------------------|---------|
+| $10,000 locked, earning $0 | $10,000 in OUSG earning 5% APY |
+| After 3 months: $0 interest | After 3 months: **$125 yield earned** |
+| Freelancer gets: $10,000 | Freelancer gets: $10,000 |
+| You get: $0 | **You keep: $125** |
+
+**Everyone wins!** Freelancers get paid securely, clients earn passive income while waiting.
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployed Contracts (Stellar Testnet)
 
-### Smart Contracts (Production)
-
-```bash
-# Switch to mainnet for production deployment
-soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/escrow_core.wasm \
-  --source <YOUR_MAINNET_SECRET_KEY> \
-  --network mainnet
+```
+Escrow Core:       CBODRX25CTCLSMT3NKNIVCXBO3SLI6L3LQDXBNLAQZJHLRQFBCR7K3TV
+Liquidity Router:  CCUOQOU22PFM4NUY7EHSFCFQGLP3KWOYOVF3HM7MOBISAP6Z24DLKCNU
+Yield Harvester:   CBOKKOSO6P54XFLDHYACEZDASNUUEE5IMDOZX2YSF5LNT7PI4PVG3OVV
 ```
 
-### Frontend Deployment
+[View on Stellar Expert](https://stellar.expert/explorer/testnet)
 
-#### Vercel (Recommended)
+---
 
-```bash
-# Install Vercel CLI
-npm i -g vercel
+## 🛠️ Tech Stack
 
-# Build project
-npm run build
+**Blockchain:**
+- Stellar/Soroban smart contracts (Rust)
+- OUSG (Real World Asset - Tokenized US Treasuries)
+- Stellar DEX for liquidity
 
-# Deploy
-vercel --prod
-```
+**Frontend:**
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS (styling)
+- Framer Motion (smooth animations & transitions)
+- React Router DOM (navigation)
+- Freighter Wallet integration
+- LocalStorage (wallet persistence)
 
-#### Netlify
+**Smart Contracts:**
+- `escrow_core` - Job and payment management with milestone tracking
+- `rwa_yield_harvester` - Automatic OUSG yield generation (5% APY)
+- `liquidity_router` - Multi-currency swaps via Stellar DEX
 
-```bash
-# Build project
-npm run build
+**UI Components:**
+- Animated counters and progress bars
+- Gradient backgrounds with motion effects
+- Skeleton loaders for async data
+- Toast notifications
+- Modal dialogs with smooth transitions
 
-# Deploy dist/ folder via Netlify CLI or dashboard
-```
+---
 
-### Environment Variables
+## 🎨 Design System
 
-Create a `.env` file in the `frontend/` directory:
+### Colors
+- **Primary**: Orange/Coral (#F97316)
+- **Background**: Pure Black (#000000)
+- **Surface**: Dark Gray (#0F0F0F)
+- **Text**: White (#FFFFFF) / Gray variations
 
-```env
-VITE_STELLAR_NETWORK=testnet  # or 'mainnet' for production
-VITE_ESCROW_CONTRACT=<YOUR_ESCROW_CONTRACT_ID>
-VITE_YIELD_CONTRACT=<YOUR_YIELD_CONTRACT_ID>
-VITE_ROUTER_CONTRACT=<YOUR_ROUTER_CONTRACT_ID>
-```
+### Typography
+- Headlines: 700-800 weight, orange accent
+- Body: 400-500 weight
+- Numbers: Monospace for addresses/amounts
 
 ---
 
 ## 🔐 Security
 
-- ✅ **Wallet Signature Required**: All transactions require explicit user approval
-- ✅ **Role-Based Access**: Client and freelancer authentication via Stellar accounts
-- ✅ **Immutable Logic**: Smart contracts deployed on-chain, code cannot be modified
-- ✅ **Open Source**: Fully auditable codebase
-- ✅ **No Private Key Storage**: Keys managed exclusively by Freighter wallet
-
-> **Production Recommendation**: Conduct a third-party smart contract audit before mainnet deployment.
+- ✅ Milestone-based escrow prevents payment disputes
+- ✅ Smart contract code audited (testnet - audit needed for mainnet)
+- ✅ Trustless - no centralized party controls funds
+- ✅ Battle-tested Stellar blockchain infrastructure
+- ✅ Real World Assets (OUSG) backed by US Treasury bonds
 
 ---
 
-## 📊 Protocol Statistics
+## 🌍 Supported Currencies
 
-| Metric | Value |
-|--------|-------|
-| **Transaction Speed** | < 5 seconds |
-| **Gas Fees** | ~$0.0001 per transaction |
-| **RWA APY** | 5%+ (OUSG) |
-| **Supported Currencies** | USDC, INR (+ extensible) |
-| **Milestone Limit** | 1-3 per job |
+| Currency | Symbol | Type |
+|----------|--------|------|
+| Stellar Lumens | XLM | Native |
+| USD Coin | USDC | Stablecoin |
+| OUSG | OUSG | RWA Token |
+| Indian Rupee* | INR | Fiat Token |
+| Kenyan Shilling* | KES | Fiat Token |
+| Nigerian Naira* | NGN | Fiat Token |
+
+*Fiat tokens coming soon
 
 ---
 
-## 🛣️ Roadmap
+## 🎯 Roadmap
 
-- [ ] Multi-token support (USDT, XLM, etc.)
-- [ ] Partial payment releases
-- [ ] Dispute resolution mechanism
-- [ ] Integration with additional RWA protocols
+- [x] Core escrow functionality
+- [x] OUSG yield integration
+- [x] Multi-currency support
+- [x] Testnet deployment
+- [x] Modern UI with animations
+- [ ] Security audit
+- [ ] Mainnet deployment
+- [ ] Dispute resolution system
+- [ ] Freelancer reputation system
 - [ ] Mobile app (React Native)
-- [ ] Advanced analytics dashboard
-- [ ] DAO governance for protocol upgrades
+- [ ] Fiat on/off ramps
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+Contributions welcome! Please read our contributing guidelines first.
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### Development Guidelines
-- Write tests for new features
-- Follow existing code style (Prettier + ESLint)
-- Update documentation for API changes
-- Ensure all tests pass before submitting PR
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ---
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🔗 Resources
-
-- 📚 **[Stellar Documentation](https://developers.stellar.org/)**
-- 🔧 **[Soroban Smart Contracts](https://soroban.stellar.org/)**
-- 🌐 **[Stellar Laboratory](https://laboratory.stellar.org/)** (Testnet Tools)
-- 💼 **[Freighter Wallet](https://www.freighter.app/)**
-- 🏦 **[Ondo Finance](https://ondo.finance/)** (OUSG RWA Provider)
+MIT License - see LICENSE file for details
 
 ---
 
-## 📧 Support
+## 🙏 Acknowledgments
 
-- **Issues**: [GitHub Issues](https://github.com/sukrit-89/Flowpay/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/sukrit-89/Flowpay/discussions)
+- Stellar Development Foundation for Soroban
+- Ondo Finance for OUSG tokenization
+- Freighter Wallet team
 
 ---
 
-<div align="center">
+## 📞 Contact
 
-**Built with ❤️ for the Stellar Ecosystem**
+- Website: [yieldra.io](#)
+- Twitter: [@yieldra](#)
+- Discord: [Join our community](#)
+- Email: hello@yieldra.io
 
-⭐ **Star this repo if FlowPay helps you!** ⭐
+---
 
-</div>
+**Built with ❤️ on Stellar**
+
+*Earn while you pay. That's the Yieldra difference.*

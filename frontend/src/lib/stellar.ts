@@ -1,157 +1,211 @@
 import {
     SorobanRpc,
-    Contract,
     TransactionBuilder,
+    Transaction,
     Networks,
-    BASE_FEE,
-    xdr,
+    Contract,
     Address,
     nativeToScVal,
+    xdr
 } from '@stellar/stellar-sdk';
+import { config } from './config';
 
-// Network configuration
-export const STELLAR_NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'testnet';
-export const SOROBAN_RPC_URL = STELLAR_NETWORK === 'testnet'
-    ? 'https://soroban-testnet.stellar.org'
-    : 'https://soroban-mainnet.stellar.org';
-
-export const NETWORK_PASSPHRASE = STELLAR_NETWORK === 'testnet'
-    ? Networks.TESTNET
-    : Networks.PUBLIC;
-
-// Contract addresses from environment
-export const CONTRACT_IDS = {
-    ESCROW_CORE: import.meta.env.VITE_ESCROW_CONTRACT,
-    RWA_YIELD_HARVESTER: import.meta.env.VITE_YIELD_CONTRACT,
-    LIQUIDITY_ROUTER: import.meta.env.VITE_ROUTER_CONTRACT,
-};
+// Stellar Network Configuration (from environment)
+export const STELLAR_NETWORK = config.network.name;
+export const NETWORK_PASSPHRASE = config.network.name === 'MAINNET' ? Networks.PUBLIC : Networks.TESTNET;
+export const HORIZON_URL = config.network.horizonUrl;
+export const SOROBAN_URL = config.network.sorobanUrl;
 
 // Initialize Soroban RPC Server
-let rpcServer: SorobanRpc.Server | null = null;
+export const server = new SorobanRpc.Server(SOROBAN_URL);
 
-export const getRpcServer = () => {
-    if (!rpcServer) {
-        rpcServer = new SorobanRpc.Server(SOROBAN_RPC_URL);
-    }
-    return rpcServer;
+// Contract IDs (from environment)
+export const CONTRACT_IDS = {
+    ESCROW_CORE: config.contracts.escrowCore,
+    LIQUIDITY_ROUTER: config.contracts.liquidityRouter,
+    YIELD_HARVESTER: config.contracts.yieldHarvester,
 };
 
-// Get contract instance
-export const getContract = (contractId: string) => {
-    return new Contract(contractId);
+// Token Addresses (from environment)
+export const TOKEN_ADDRESSES = {
+    USDC: config.tokens.USDC,
+    XLM: config.tokens.XLM,
+    OUSG: config.tokens.OUSG,
+    INR: config.tokens.INR,
+    KES: config.tokens.KES,
+    NGN: config.tokens.NGN,
 };
 
-// Build a contract invocation transaction
-export const buildContractTransaction = async (
-    sourceAccount: string,
+/**
+ * Build a Soroban contract transaction (returns TransactionBuilder for flexibility)
+ */
+export async function buildContractTransaction(
     contractId: string,
     method: string,
-    params: xdr.ScVal[]
-): Promise<TransactionBuilder> => {
-    const server = getRpcServer();
-    const contract = getContract(contractId);
+    params: xdr.ScVal[],
+    signerAddress: string
+): Promise<TransactionBuilder> {
+    // Load account
+    const account = await server.getAccount(signerAddress);
 
-    // Get account details
-    const account = await server.getAccount(sourceAccount);
+    // Create contract instance
+    const contract = new Contract(contractId);
 
-    // Build transaction
+    // Build operation
+    const operation = contract.call(method, ...params);
+
+    // Build transaction builder (NOT built yet for simulation)
     const transaction = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: NETWORK_PASSPHRASE,
+        fee: '10000000', // 1 XLM max fee
+        networkPassphrase: NETWORK_PASSPHRASE
     })
-        .addOperation(contract.call(method, ...params))
-        .setTimeout(30);
+        .addOperation(operation)
+        .setTimeout(180);
 
     return transaction;
-};
+}
 
-// Sign transaction with Freighter
-export const signWithFreighter = async (xdr: string, network: string): Promise<string> => {
-    if (!(window as any).freighter) {
-        throw new Error('Freighter wallet not installed');
+/**
+ * Simulate and prepare transaction
+ */
+export async function simulateTransaction(tx: Transaction): Promise<Transaction> {
+    const simulated = await server.simulateTransaction(tx);
+
+    if (SorobanRpc.Api.isSimulationError(simulated)) {
+        throw new Error(`Simulation failed: ${simulated.error}`);
     }
 
-    const signedXdr = await (window as any).freighter.signTransaction(xdr, {
-        network,
-        networkPassphrase: NETWORK_PASSPHRASE,
-    });
+    // assembleTransaction returns a Transaction
+    const assembled: any = SorobanRpc.assembleTransaction(tx, simulated);
+    return assembled as Transaction;
+}
 
-    return signedXdr;
-};
+/**
+ * Submit transaction to network
+ */
+export async function submitTransaction(signedTxXdr: string) {
+    const signedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
+    const result = await server.sendTransaction(signedTx as any);
 
-// Submit transaction to network
-export const submitTransaction = async (signedXdr: string) => {
-    const server = getRpcServer();
-    const transaction = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
+    return result;
+}
 
-    const response = await server.sendTransaction(transaction as any);
+/**
+ * Wait for transaction confirmation
+ */
+export async function waitForTransaction(txHash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
+    let attempts = 0;
+    const maxAttempts = 30;
 
-    // Poll for result
-    if (response.status === 'PENDING') {
-        let getResponse = await server.getTransaction(response.hash);
+    while (attempts < maxAttempts) {
+        const status = await server.getTransaction(txHash);
 
-        // Poll until transaction is completed
-        while (getResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            getResponse = await server.getTransaction(response.hash);
+        if (status.status !== 'NOT_FOUND') {
+            return status;
         }
 
-        if (getResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
-            return { success: true, hash: response.hash, result: getResponse };
-        } else {
-            throw new Error(`Transaction failed: ${getResponse.status}`);
-        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
     }
 
-    return { success: true, hash: response.hash };
-};
+    throw new Error('Transaction timeout');
+}
 
-// Helper to convert JavaScript values to ScVal
-export const toScVal = {
-    address: (addr: string) => new Address(addr).toScVal(),
-    u32: (num: number) => nativeToScVal(num, { type: 'u32' }),
-    i128: (num: bigint) => nativeToScVal(num, { type: 'i128' }),
-    string: (str: string) => nativeToScVal(str, { type: 'string' }),
-};
+/**
+ * Convert native JS values to ScVal for contract calls
+ */
+export function toScVal(value: any, type?: string): xdr.ScVal {
+    if (type === 'address') {
+        // Address.fromString() handles both G-addresses and C-addresses
+        const addr = Address.fromString(value);
+        return nativeToScVal(addr, { type: 'address' });
+    } else if (type === 'i128') {
+        return nativeToScVal(value, { type: 'i128' });
+    } else if (type === 'u32') {
+        return nativeToScVal(value, { type: 'u32' });
+    } else if (type === 'string') {
+        return nativeToScVal(value, { type: 'string' });
+    } else if (type === 'bytes32') {
+        return nativeToScVal(value, { type: 'bytes' });
+    }
 
-// Get account balance  
-export const getAccountBalance = async (address: string): Promise<string> => {
+    // Auto-detect
+    return nativeToScVal(value);
+}
+
+/**
+ * Convert ScVal result to native JS value
+ */
+export function fromScVal(scVal: xdr.ScVal): any {
+    // This is simplified - in production, use proper decoding
     try {
-        // Note: SorobanRpc.Server.getAccount() doesn't provide balance info
-        // For balances, you would need to use Horizon API
-        // This is a placeholder for future implementation
-        console.log('Balance check for:', address);
-        return '0';
-    } catch (error) {
-        console.error('Error fetching balance:', error);
-        return '0';
+        return scVal;
+    } catch (e) {
+        console.error('Failed to decode ScVal:', e);
+        return null;
     }
-};
+}
 
-// Invoke contract and return result
-export const invokeContract = async (
-    sourceAccount: string,
+/**
+ * Get account info
+ */
+export async function getAccount(address: string) {
+    return await server.getAccount(address);
+}
+
+/**
+ * Build and execute a complete contract call workflow
+ */
+export async function executeContractCall(
     contractId: string,
     method: string,
-    params: xdr.ScVal[]
-) => {
+    params: xdr.ScVal[],
+    signerAddress: string,
+    signFunction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
+): Promise<{ success: boolean; txHash?: string; result?: any; error?: string }> {
     try {
-        // Build transaction
-        const txBuilder = await buildContractTransaction(sourceAccount, contractId, method, params);
+        // Build transaction builder
+        const txBuilder = await buildContractTransaction(contractId, method, params, signerAddress);
         const tx = txBuilder.build();
 
-        // Get XDR
-        const xdr = tx.toXDR();
+        // Simulate - returns Transaction
+        console.log('Simulating transaction...');
+        const prepared = await simulateTransaction(tx);
 
-        // Sign with Freighter
-        const signedXdr = await signWithFreighter(xdr, STELLAR_NETWORK);
+        // Sign
+        console.log('Requesting signature...');
+        const preparedXdr = prepared.toXDR(); // Transaction has toXDR method
+        const signResult = await signFunction(preparedXdr, NETWORK_PASSPHRASE);
 
-        // Submit to network
-        const result = await submitTransaction(signedXdr);
+        if (!signResult.success || !signResult.signedXdr) {
+            return { success: false, error: signResult.error || 'Signature failed' };
+        }
 
-        return result;
-    } catch (error) {
-        console.error('Contract invocation failed:', error);
-        throw error;
+        // Submit
+        console.log('Submitting transaction...');
+        const submitResult = await submitTransaction(signResult.signedXdr);
+
+        // Wait for confirmation
+        console.log('Waiting for confirmation...');
+        const status = await waitForTransaction(submitResult.hash);
+
+        if (status.status === 'SUCCESS') {
+            return {
+                success: true,
+                txHash: submitResult.hash,
+                result: (status as any).returnValue
+            };
+        } else {
+            return {
+                success: false,
+                error: `Transaction failed: ${status.status}`
+            };
+        }
+    } catch (error: any) {
+        console.error('Contract call failed:', error);
+        return {
+            success: false,
+            error: error.message || 'Unknown error'
+        };
     }
-};
+}

@@ -1,144 +1,254 @@
 import { useState } from 'react';
-import { invokeContract, CONTRACT_IDS, toScVal } from '../lib/stellar';
-import { xdr } from '@stellar/stellar-sdk';
+import {
+    createJobContract,
+    submitProofContract,
+    approveMilestoneContract,
+    releasePaymentContract,
+    getJobContract,
+    getExchangeRate,
+    calculateYield,
+    depositForYield,
+    harvestYield,
+    withdrawFromYield
+} from '../lib/contracts';
+import { useWallet } from './useWallet';
 
-// Hook for interacting with Soroban smart contracts
 export function useContracts() {
+    const { address, signTransaction } = useWallet();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const createJob = async (
-        clientAddress: string,
         freelancerAddress: string,
         totalAmount: number,
-        assetAddress: string,
-        milestones: number
+        milestoneCount: number,
+        assetType: 'USDC' | 'XLM' = 'USDC'
     ) => {
         setLoading(true);
         setError(null);
 
         try {
-            // Convert parameters to ScVal
-            const params = [
-                toScVal.address(clientAddress),
-                toScVal.address(freelancerAddress),
-                toScVal.i128(BigInt(totalAmount * 10_000_000)), // Convert to stroops
-                toScVal.address(assetAddress),
-                toScVal.u32(milestones),
-            ];
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
 
-            // Invoke contract
-            const result = await invokeContract(
-                clientAddress,
-                CONTRACT_IDS.ESCROW_CORE,
-                'create_job',
-                params
-            );
-
-            console.log('Job created successfully:', result);
-            return { success: true, hash: result.hash };
-        } catch (err: any) {
-            const errorMsg = err.message || 'Failed to create job';
-            console.error('Failed to create job:', err);
-            setError(errorMsg);
-            return { success: false, error: errorMsg };
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const submitProof = async (
-        freelancerAddress: string,
-        jobId: string,
-        milestoneId: number,
-        proofUrl: string
-    ) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            // Convert job_id string to BytesN<32>
-            const jobIdBytes = Buffer.from(jobId, 'hex');
-
-            const params = [
-                xdr.ScVal.scvBytes(jobIdBytes),
-                toScVal.u32(milestoneId),
-                toScVal.string(proofUrl),
-            ];
-
-            const result = await invokeContract(
+            const result = await createJobContract(
+                address,
                 freelancerAddress,
-                CONTRACT_IDS.ESCROW_CORE,
-                'submit_proof',
-                params
+                totalAmount,
+                assetType,
+                milestoneCount,
+                signTransaction
             );
 
-            console.log('Proof submitted successfully:', result);
-            return { success: true, hash: result.hash };
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to create job');
+            }
+
+            return {
+                success: true,
+                jobId: result.txHash, // Use tx hash as job ID for now
+                txHash: result.txHash
+            };
         } catch (err: any) {
-            const errorMsg = err.message || 'Failed to submit proof';
-            console.error('Failed to submit proof:', err);
-            setError(errorMsg);
-            return { success: false, error: errorMsg };
+            setError(err.message);
+            return { success: false, error: err.message };
         } finally {
             setLoading(false);
         }
     };
 
-    const approveMilestone = async (
-        clientAddress: string,
-        jobId: string,
-        milestoneId: number
-    ) => {
+    const submitProof = async (jobId: string, milestoneId: number, proofUrl: string) => {
         setLoading(true);
         setError(null);
 
         try {
-            // Convert job_id string to BytesN<32>
-            const jobIdBytes = Buffer.from(jobId, 'hex');
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
 
-            const params = [
-                xdr.ScVal.scvBytes(jobIdBytes),
-                toScVal.u32(milestoneId),
-            ];
-
-            const result = await invokeContract(
-                clientAddress,
-                CONTRACT_IDS.ESCROW_CORE,
-                'approve_milestone',
-                params
+            const result = await submitProofContract(
+                address,
+                jobId,
+                milestoneId,
+                proofUrl,
+                signTransaction
             );
 
-            console.log('Milestone approved successfully:', result);
-            return { success: true, hash: result.hash };
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to submit proof');
+            }
+
+            return { success: true, txHash: result.txHash };
         } catch (err: any) {
-            const errorMsg = err.message || 'Failed to approve milestone';
-            console.error('Failed to approve milestone:', err);
-            setError(errorMsg);
-            return { success: false, error: errorMsg };
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const approveMilestone = async (jobId: string, milestoneId: number) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
+
+            const result = await approveMilestoneContract(
+                address,
+                jobId,
+                milestoneId,
+                signTransaction
+            );
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to approve milestone');
+            }
+
+            return { success: true, txHash: result.txHash };
+        } catch (err: any) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const releasePayment = async (jobId: string, milestoneId: number) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
+
+            const result = await releasePaymentContract(
+                address,
+                jobId,
+                milestoneId,
+                signTransaction
+            );
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to release payment');
+            }
+
+            return { success: true, txHash: result.txHash };
+        } catch (err: any) {
+            setError(err.message);
+            return { success: false, error: err.message };
         } finally {
             setLoading(false);
         }
     };
 
     const getJob = async (jobId: string) => {
+        try {
+            const result = await getJobContract(jobId);
+            return result;
+        } catch (err: any) {
+            console.error('Failed to get job:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const fetchExchangeRate = async (
+        fromCurrency: string,
+        toCurrency: string,
+        amount: number
+    ) => {
+        try {
+            return await getExchangeRate(fromCurrency, toCurrency, amount);
+        } catch (err: any) {
+            console.error('Failed to get exchange rate:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const calculateYieldAmount = async () => {
+        try {
+            if (!address) {
+                return { success: false, error: 'Wallet not connected' };
+            }
+
+            return await calculateYield(address);
+        } catch (err: any) {
+            console.error('Failed to calculate yield:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    const depositToYield = async (amount: number) => {
         setLoading(true);
         setError(null);
 
         try {
-            // TODO: Implement proper contract read with simulation
-            // For now, this is a placeholder
-            console.log('Getting job:', jobId);
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
 
-            return {
-                success: true,
-                job: null // Will be implemented with proper contract read
-            };
+            const result = await depositForYield(address, amount, signTransaction);
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to deposit');
+            }
+
+            return { success: true, txHash: result.txHash };
         } catch (err: any) {
-            const errorMsg = err.message || 'Failed to get job';
-            console.error('Failed to get job:', err);
-            setError(errorMsg);
-            return { success: false, error: errorMsg };
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const harvestYieldAmount = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
+
+            const result = await harvestYield(address, signTransaction);
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to harvest yield');
+            }
+
+            return { success: true, txHash: result.txHash };
+        } catch (err: any) {
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const withdrawYield = async (amount: number) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (!address) {
+                throw new Error('Wallet not connected');
+            }
+
+            const result = await withdrawFromYield(address, amount, signTransaction);
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to withdraw');
+            }
+
+            return { success: true, txHash: result.txHash };
+        } catch (err: any) {
+            setError(err.message);
+            return { success: false, error: err.message };
         } finally {
             setLoading(false);
         }
@@ -150,6 +260,12 @@ export function useContracts() {
         createJob,
         submitProof,
         approveMilestone,
+        releasePayment,
         getJob,
+        fetchExchangeRate,
+        calculateYieldAmount,
+        depositToYield,
+        harvestYieldAmount,
+        withdrawYield
     };
 }

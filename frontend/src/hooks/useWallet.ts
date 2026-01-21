@@ -27,6 +27,14 @@ export function useWallet() {
 
                 if (installed) {
                     console.log('✅ Freighter wallet detected on attempt', attemptNum);
+
+                    // Try to restore previous connection from localStorage
+                    const savedAddress = localStorage.getItem('yieldra_wallet_address');
+                    if (savedAddress && attemptNum === 1) {
+                        console.log('🔄 Restoring previous wallet connection...');
+                        setAddress(savedAddress);
+                        setConnected(true);
+                    }
                 } else {
                     console.log(`⏳ Freighter not detected (attempt ${attemptNum})...`);
                 }
@@ -99,6 +107,7 @@ export function useWallet() {
 
             setAddress(addressResult.address);
             setConnected(true);
+            localStorage.setItem('yieldra_wallet_address', addressResult.address);
             console.log('✅ Wallet connected!');
 
             return { success: true, address: addressResult.address };
@@ -114,6 +123,7 @@ export function useWallet() {
         setAddress('');
         setConnected(false);
         setError(null);
+        localStorage.removeItem('yieldra_wallet_address');
         console.log('👋 Wallet disconnected');
     };
 

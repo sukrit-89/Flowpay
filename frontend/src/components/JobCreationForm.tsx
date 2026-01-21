@@ -12,7 +12,6 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
     const [totalAmount, setTotalAmount] = useState('');
     const [milestones, setMilestones] = useState(1);
     const [payoutCurrency, setPayoutCurrency] = useState<'USDC' | 'INR'>('USDC');
-    const [assetAddress] = useState('CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'); // Native XLM for now
 
     const { address, connected } = useWallet();
     const { createJob, loading, error } = useContracts();
@@ -30,16 +29,15 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
 
         try {
             const result = await createJob(
-                address, // client address
                 freelancerAddress,
                 parseFloat(totalAmount),
-                assetAddress,
-                milestones
+                milestones,
+                'XLM' // assetType
             );
 
             if (result.success) {
-                alert(`Job created successfully! Transaction hash: ${result.hash}`);
-                onSubmit(result.hash);
+                alert(`Job created successfully! Transaction hash: ${result.txHash}`);
+                onSubmit(result.txHash);
 
                 // Reset form
                 setJobTitle('');
@@ -158,8 +156,8 @@ export default function JobCreationForm({ onSubmit }: JobCreationFormProps) {
                     onClick={handleSubmit}
                     disabled={loading || !connected}
                     className={`w-full py-3 rounded-lg font-medium ${loading || !connected
-                            ? 'bg-gray-600 cursor-not-allowed'
-                            : 'bg-blue-500 hover:bg-blue-600'
+                        ? 'bg-gray-600 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600'
                         }`}
                 >
                     {loading ? 'Submitting to Chain...' : connected ? 'Submit Job to Chain' : 'Connect Wallet First'}
