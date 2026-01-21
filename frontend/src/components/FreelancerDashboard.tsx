@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
 import ProofSubmission from './ProofSubmission';
 
 export default function FreelancerDashboard() {
+    const { address, connected, connect, disconnect, error } = useWallet();
     const [payoutCurrency, setPayoutCurrency] = useState<'USDC' | 'INR'>('USDC');
     const [jobs] = useState([
         {
@@ -29,14 +31,33 @@ export default function FreelancerDashboard() {
                     <span className="text-xl font-bold">FlowPay</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-lg">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm">0x71C...3A21</span>
-                    </div>
-                    <button className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-medium">
-                        Connect Wallet
-                    </button>
+                    {connected ? (
+                        <>
+                            <div className="flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-lg">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-sm">{address.slice(0, 6)}...{address.slice(-4)}</span>
+                            </div>
+                            <button
+                                onClick={disconnect}
+                                className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-medium"
+                            >
+                                Disconnect
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={connect}
+                            className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-medium"
+                        >
+                            Connect Wallet
+                        </button>
+                    )}
                 </div>
+                {error && (
+                    <div className="absolute top-20 right-6 bg-red-500/20 border border-red-500 rounded-lg p-3 text-red-300 text-sm max-w-xs">
+                        {error}
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-3 gap-6">

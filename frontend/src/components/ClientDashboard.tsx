@@ -1,23 +1,16 @@
 import { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
 import JobCreationForm from './JobCreationForm';
 import TransactionModal from './TransactionModal';
 
 export default function ClientDashboard() {
-    const [walletAddress, setWalletAddress] = useState('');
+    const { address, connected, connect, disconnect, error } = useWallet();
     const [showTxModal, setShowTxModal] = useState(false);
     const [activeJobs] = useState([
         { id: 1, name: 'Smart Contract Audit', status: 'LOCKED', amount: '12,500.00 OUSG' },
         { id: 2, name: 'Smart Contract Audit 2', status: 'LOCKED', amount: '8,300.00 OUSG' },
         { id: 3, name: 'Smart Contract Audit 3', status: 'LOCKED', amount: '6,200.00 OUSG' },
     ]);
-
-    const connectWallet = async () => {
-        // Freighter wallet integration
-        if ((window as any).freighter) {
-            const publicKey = await (window as any).freighter.getPublicKey();
-            setWalletAddress(publicKey);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-[#0a0e17] text-gray-50 p-8">
@@ -27,12 +20,33 @@ export default function ClientDashboard() {
                     <div className="w-10 h-10 bg-blue-500 rounded-lg"></div>
                     <span className="text-xl font-bold">FlowPay</span>
                 </div>
-                <button
-                    onClick={connectWallet}
-                    className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-medium"
-                >
-                    {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Connect Wallet'}
-                </button>
+                <div className="flex items-center gap-3">
+                    {connected ? (
+                        <>
+                            <span className="text-sm text-gray-400">
+                                {address.slice(0, 6)}...{address.slice(-4)}
+                            </span>
+                            <button
+                                onClick={disconnect}
+                                className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-medium"
+                            >
+                                Disconnect
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={connect}
+                            className="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded-lg font-medium"
+                        >
+                            Connect Wallet
+                        </button>
+                    )}
+                </div>
+                {error && (
+                    <div className="absolute top-20 right-6 bg-red-500/20 border border-red-500 rounded-lg p-3 text-red-300 text-sm max-w-xs">
+                        {error}
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-3 gap-6">

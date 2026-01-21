@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react';
+import {
+    isConnected,
+    requestAccess,
+    signTransaction as freighterSignTransaction,
+    getNetwork
+} from '@stellar/freighter-api';
 import { STELLAR_NETWORK } from '../lib/stellar';
-
-declare global {
-    interface Window {
-        freighter?: {
-            isConnected: () => Promise<boolean>;
-            getPublicKey: () => Promise<string>;
-            signTransaction: (xdr: string, options: { network: string; networkPassphrase: string }) => Promise<string>;
-            getNetwork: () => Promise<string>;
-        };
-    }
-}
 
 export function useWallet() {
     const [address, setAddress] = useState<string>('');
@@ -22,16 +17,22 @@ export function useWallet() {
         let mounted = true;
         const timeouts: NodeJS.Timeout[] = [];
 
-        const checkFreighter = (attemptNum: number) => {
+        const checkFreighter = async (attemptNum: number) => {
             if (!mounted) return;
 
-            const isInstalled = !!(window as any).freighter;
-            setIsFreighterInstalled(isInstalled);
+            try {
+                const result = await isConnected();
+                const installed = result.isConnected;
+                setIsFreighterInstalled(installed);
 
-            if (isInstalled) {
-                console.log('✅ Freighter wallet detected on attempt', attemptNum);
-            } else {
-                console.log(`⏳ Freighter not detected (attempt ${attemptNum})...`);
+                if (installed) {
+                    console.log('✅ Freighter wallet detected on attempt', attemptNum);
+                } else {
+                    console.log(`⏳ Freighter not detected (attempt ${attemptNum})...`);
+                }
+            } catch (err) {
+                console.log(`⏳ Freighter not detected (attempt ${attemptNum})...`, err);
+                setIsFreighterInstalled(false);
             }
         };
 
@@ -52,43 +53,55 @@ export function useWallet() {
         console.log('🔌 Attempting to connect wallet...');
 
         try {
-            if (!(window as any).freighter) {
+            // Check if Freighter is installed
+            const connectedResult = await isConnected();
+            if (!connectedResult.isConnected) {
                 throw new Error('Freighter wallet not installed. Install from https://www.freighter.app/');
             }
 
-            let publicKey;
+            // Request access (this will show Freighter popup and return address)
+            let addressResult;
             try {
-                publicKey = await (window as any).freighter.getPublicKey();
+                addressResult = await requestAccess();
+
+                if (addressResult.error) {
+                    throw new Error(addressResult.error);
+                }
             } catch (freighterErr: any) {
                 console.error('Freighter API error:', freighterErr);
-                if (freighterErr.message?.includes('message channel')) {
-                    throw new Error('Freighter error. Please: 1) Refresh page, 2) Restart Freighter, or 3) Restart browser');
+                if (freighterErr.message?.includes('User declined')) {
+                    throw new Error('Connection cancelled. Please approve in Freighter popup.');
                 }
-                throw freighterErr;
+                throw new Error('Freighter error. Please try: 1) Refresh page, 2) Restart Freighter, or 3) Restart browser');
             }
 
-            if (!publicKey) {
+            if (!addressResult.address) {
                 throw new Error('Connection cancelled. Please approve in Freighter popup.');
             }
 
-            console.log('📝 Public key received:', publicKey.slice(0, 8) + '...');
+            console.log('📝 Public key received:', addressResult.address.slice(0, 8) + '...');
 
+            // Check network
             try {
-                const network = await (window as any).freighter.getNetwork();
-                console.log('🌐 Network:', network);
+                const networkResult = await getNetwork();
+                if (networkResult.error) {
+                    console.warn('Network check error:', networkResult.error);
+                } else {
+                    console.log('🌐 Network:', networkResult.network);
 
-                if (network.toUpperCase() !== STELLAR_NETWORK.toUpperCase()) {
-                    setError(`⚠️ Please switch Freighter to ${STELLAR_NETWORK}. Currently on: ${network}`);
+                    if (networkResult.network.toUpperCase() !== STELLAR_NETWORK.toUpperCase()) {
+                        setError(`⚠️ Please switch Freighter to ${STELLAR_NETWORK}. Currently on: ${networkResult.network}`);
+                    }
                 }
             } catch (netErr) {
                 console.warn('Network check failed (continuing):', netErr);
             }
 
-            setAddress(publicKey);
+            setAddress(addressResult.address);
             setConnected(true);
             console.log('✅ Wallet connected!');
 
-            return { success: true, address: publicKey };
+            return { success: true, address: addressResult.address };
         } catch (err: any) {
             const errorMsg = err.message || 'Failed to connect wallet';
             console.error('❌ Connection failed:', err);
@@ -107,14 +120,17 @@ export function useWallet() {
     const signTransaction = async (xdr: string, networkPassphrase: string) => {
         try {
             if (!connected) throw new Error('Wallet not connected');
-            if (!(window as any).freighter) throw new Error('Freighter not found');
 
-            const signedXdr = await (window as any).freighter.signTransaction(xdr, {
-                network: STELLAR_NETWORK,
+            const result = await freighterSignTransaction(xdr, {
                 networkPassphrase,
+                address,
             });
 
-            return { success: true, signedXdr };
+            if (result.error) {
+                throw new Error(result.error);
+            }
+
+            return { success: true, signedXdr: result.signedTxXdr };
         } catch (err: any) {
             console.error('Failed to sign transaction:', err);
             return { success: false, error: err.message || 'Failed to sign transaction' };
