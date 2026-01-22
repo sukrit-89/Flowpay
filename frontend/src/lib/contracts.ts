@@ -19,14 +19,17 @@ export const createJobContract = async (
     milestoneCount: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
-    const assetAddress = TOKEN_ADDRESSES[assetType];
-    const amountStroops = Math.floor(totalAmount * 10_000_000); // Convert to stroops (7 decimals)
+    // For XLM, use native token handling
+    const assetAddress = assetType === 'XLM' ? 'XLM' : TOKEN_ADDRESSES[assetType];
+    const amountStroops = assetType === 'XLM' 
+        ? Math.floor(totalAmount * 10_000_000) // XLM uses 7 decimals
+        : Math.floor(totalAmount * 1_000_000); // USDC uses 6 decimals
 
     const params = [
         toScVal(clientAddress, 'address'),
         toScVal(freelancerAddress, 'address'),
         toScVal(amountStroops, 'i128'),
-        toScVal(assetAddress, 'address'),
+        toScVal(assetAddress, assetType === 'XLM' ? 'string' : 'address'),
         toScVal(milestoneCount, 'u32')
     ];
 

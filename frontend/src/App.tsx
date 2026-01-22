@@ -8,6 +8,7 @@ import ClientSettings from './components/client/ClientSettings';
 import FreelancerJobs from './components/freelancer/FreelancerJobs';
 import FreelancerWallet from './components/freelancer/FreelancerWallet';
 import FreelancerSettings from './components/freelancer/FreelancerSettings';
+import JobDetails from './components/client/JobDetails';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                     <Route path="/" element={<Landing />} />
                     <Route path="/client" element={<ClientDashboard />} />
                     <Route path="/client/jobs" element={<ClientJobs />} />
+                    <Route path="/client/jobs/:jobId" element={<JobDetails />} />
                     <Route path="/client/wallet" element={<ClientWallet />} />
                     <Route path="/client/settings" element={<ClientSettings />} />
                     <Route path="/freelancer" element={<FreelancerDashboard />} />

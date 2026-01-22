@@ -1,67 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useWallet } from '../hooks/useWallet';
+import { useNavigate } from 'react-router-dom';
 import FadeInUp from './animated/FadeInUp';
 import AnimatedCounter from './animated/AnimatedCounter';
 import { hoverLift, staggerContainer, fadeInUp } from '../animations/variants';
 import Sidebar from './shared/Sidebar';
 
+interface Job {
+    id: string;
+    title: string;
+    description: string;
+    totalAmount: number;
+    milestones: number;
+    status: 'pending' | 'in_progress' | 'completed';
+    freelancerAddress: string;
+    clientAddress: string;
+    createdAt: string;
+    txHash?: string;
+}
+
 export default function FreelancerDashboard() {
     const { address, connected, connect, disconnect, error } = useWallet();
     const [activeTab, setActiveTab] = useState('available');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const navigate = useNavigate();
 
-    // Mock data
+    // Fetch real jobs from localStorage
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const storedJobs = localStorage.getItem('yieldra_jobs');
+                let parsedJobs: Job[] = storedJobs ? JSON.parse(storedJobs) : [];
+                
+                // Show all jobs (freelancer can see all available jobs)
+                setJobs(parsedJobs);
+            } catch (error) {
+                console.error('Failed to fetch jobs:', error);
+            }
+        };
+
+        const handleJobCreated = () => {
+            fetchJobs();
+        };
+
+        fetchJobs();
+        window.addEventListener('jobCreated', handleJobCreated);
+
+        return () => {
+            window.removeEventListener('jobCreated', handleJobCreated);
+        };
+    }, []);
+
+    // Calculate real stats (for freelancer, this would be different in production)
     const stats = {
-        totalEarned: 45200,
-        activeJobs: 5,
-        completedJobs: 28,
-        avgRating: 4.9
+        totalEarned: jobs.reduce((sum, job) => sum + (job.status === 'completed' ? job.totalAmount : 0), 0),
+        activeJobs: jobs.filter(job => job.status === 'in_progress').length,
+        completedJobs: jobs.filter(job => job.status === 'completed').length,
+        avgRating: 4.9 // Would come from reputation system
     };
 
     const categories = ['All', 'Development', 'Design', 'Writing', 'Marketing'];
 
-    const availableJobs = [
-        {
-            id: 1,
-            title: 'Build DeFi Yield Aggregator',
-            category: 'Development',
-            client: 'GD7X...9K2L',
-            budget: 5000,
-            duration: '2-3 months',
-            description: 'Need experienced Solidity/Soroban developer to build yield aggregator with auto-compounding...',
-            skills: ['Rust', 'Soroban', 'DeFi'],
-            proposals: 12,
-            posted: '2 days ago',
-            verified: true
-        },
-        {
-            id: 2,
-            title: 'NFT Marketplace UI Design',
-            category: 'Design',
-            client: 'GC3M...4TY8',
-            budget: 3000,
-            duration: '3-4 weeks',
-            description: 'Looking for talented UI/UX designer to create modern NFT marketplace interface...',
-            skills: ['Figma', 'UI/UX', 'Web3'],
-            proposals: 8,
-            posted: '5 hours ago',
-            verified: false
-        },
-        {
-            id: 3,
-            title: 'Smart Contract Security Audit',
-            category: 'Development',
-            client: 'GA9L...2XC7',
-            budget: 8000,
-            duration: '1 month',
-            description: 'Comprehensive security audit needed for our Soroban contracts before mainnet launch...',
-            skills: ['Security', 'Auditing', 'Soroban'],
-            proposals: 5,
-            posted: '1 day ago',
-            verified: true
-        }
-    ];
+    // Filter jobs based on category
+    const filteredJobs = selectedCategory === 'All' 
+        ? jobs 
+        : jobs.filter(job => job.category === selectedCategory);
+
+    const availableJobs = filteredJobs.map((job, index) => ({
+        id: job.id,
+        title: job.title,
+        category: job.category || 'Development',
+        client: job.clientAddress?.slice(0, 8) + '...' + job.clientAddress?.slice(-8),
+        budget: job.totalAmount,
+        duration: job.duration || '1-3 months',
+        description: job.description,
+        skills: ['Stellar', 'Smart Contracts', 'Rust'],
+        proposals: Math.floor(Math.random() * 20), // Mock proposal count
+        posted: new Date(job.createdAt).toLocaleDateString(),
+        verified: true
+    }));
 
     const myProposals = [
         { id: 1, job: 'Token Swap Integration', status: 'pending', amount: 2500, submitted: '2 days ago' },
@@ -69,8 +88,8 @@ export default function FreelancerDashboard() {
     ];
 
     const activeContracts = [
-        { id: 1, title: 'Payment Gateway Integration', client: 'GX8K...PL3M', progress: 65, earned: 1950, total: 3000 },
-        { id: 2, title: 'Smart Contract Development', client: 'GH2Y...8NQ4', progress: 30, earned: 1200, total: 4000 }
+        { id: 1, job: 'DeFi Protocol Development', client: 'GD7X...9K2L', amount: 5000, deadline: '2 weeks', progress: 75 },
+        { id: 2, job: 'NFT Marketplace UI', client: 'GC3M...4TY8', amount: 3000, deadline: '1 week', progress: 40 }
     ];
 
     return (

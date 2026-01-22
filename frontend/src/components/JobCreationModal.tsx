@@ -38,12 +38,40 @@ export default function JobCreationModal({ onClose }: JobCreationModalProps) {
                 freelancerAddress,
                 parseFloat(totalAmount),
                 milestones,
-                'XLM'
+                'USDC'  // Changed to USDC for better stability
             );
 
             if (result.success) {
+                // Save job to localStorage for demo purposes
+                const newJob = {
+                    id: result.txHash || `job-${Date.now()}`,
+                    title: jobTitle,
+                    description: jobDescription,
+                    totalAmount: parseFloat(totalAmount),
+                    milestones: milestones,
+                    status: 'pending' as const,
+                    freelancerAddress: freelancerAddress,
+                    clientAddress: address,
+                    createdAt: new Date().toISOString(),
+                    txHash: result.txHash,
+                    category: category,
+                    duration: duration
+                };
+
+                // Store in localStorage
+                const existingJobs = localStorage.getItem('yieldra_jobs');
+                const jobs = existingJobs ? JSON.parse(existingJobs) : [];
+                jobs.push(newJob);
+                localStorage.setItem('yieldra_jobs', JSON.stringify(jobs));
+
+                console.log('🔍 Debug: Job saved:', newJob);
+                console.log('🔍 Debug: Total jobs:', jobs.length);
+
                 alert(`Job created successfully! Transaction: ${result.txHash}`);
                 onClose();
+                
+                // Refresh the jobs list by dispatching a custom event
+                window.dispatchEvent(new CustomEvent('jobCreated', { detail: { job: newJob } }));
             } else {
                 alert(`Failed to create job: ${result.error}`);
             }
@@ -160,7 +188,7 @@ export default function JobCreationModal({ onClose }: JobCreationModalProps) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Total Budget (XLM) *
+                                Total Budget (USDC) *
                             </label>
                             <input
                                 type="number"
