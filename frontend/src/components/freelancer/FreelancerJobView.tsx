@@ -58,65 +58,69 @@ export default function FreelancerJobView() {
 
         setLoadingJob(true);
         try {
-            // Try to fetch from blockchain first
-            const result = await getJobContract(jobId);
+            // First check if this job exists in localStorage (demo job)
+            const storedJobs = localStorage.getItem('yieldra_jobs');
+            const jobs = storedJobs ? JSON.parse(storedJobs) : [];
+            const foundLocalJob = jobs.find((j: any) => j.id === jobId);
             
-            if (result.success && result.result) {
-                // Parse blockchain result
-                const jobData = parseJobFromContract(result.result);
-                setJob(jobData);
-            } else {
-                // Fallback to localStorage for demo purposes
-                const storedJobs = localStorage.getItem('yieldra_jobs');
-                const jobs = storedJobs ? JSON.parse(storedJobs) : [];
+            if (foundLocalJob) {
+                // Load from localStorage if found
+                const milestoneAmounts = [
+                    foundLocalJob.totalAmount * 0.3,
+                    foundLocalJob.totalAmount * 0.4,
+                    foundLocalJob.totalAmount * 0.3
+                ];
                 
-                const foundJob = jobs.find((j: any) => j.id === jobId);
-                
-                if (foundJob) {
-                    // Generate milestones if not present or not an array
-                    const milestoneAmounts = [
-                        foundJob.totalAmount * 0.3,  // 30%
-                        foundJob.totalAmount * 0.4,  // 40%
-                        foundJob.totalAmount * 0.3   // 30%
+                const milestones = Array.isArray(foundLocalJob.milestones) 
+                    ? foundLocalJob.milestones 
+                    : [
+                        {
+                            id: 1,
+                            title: 'Initial Setup & Planning',
+                            description: 'Project setup, requirements gathering, and initial planning',
+                            amount: milestoneAmounts[0],
+                            status: 'pending' as const
+                        },
+                        {
+                            id: 2,
+                            title: 'Core Development',
+                            description: 'Main implementation and development work',
+                            amount: milestoneAmounts[1],
+                            status: 'pending' as const
+                        },
+                        {
+                            id: 3,
+                            title: 'Testing & Deployment',
+                            description: 'Testing, bug fixes, and final deployment',
+                            amount: milestoneAmounts[2],
+                            status: 'pending' as const
+                        }
                     ];
-                    
-                    // Check if milestones is an array, otherwise generate default milestones
-                    const milestones = Array.isArray(foundJob.milestones) 
-                        ? foundJob.milestones 
-                        : [
-                            {
-                                id: 1,
-                                title: 'Initial Setup & Planning',
-                                description: 'Project setup, requirements gathering, and initial planning',
-                                amount: milestoneAmounts[0],
-                                status: 'pending' as const
-                            },
-                            {
-                                id: 2,
-                                title: 'Core Development',
-                                description: 'Main implementation and development work',
-                                amount: milestoneAmounts[1],
-                                status: 'pending' as const
-                            },
-                            {
-                                id: 3,
-                                title: 'Testing & Deployment',
-                                description: 'Testing, bug fixes, and final deployment',
-                                amount: milestoneAmounts[2],
-                                status: 'pending' as const
-                            }
-                        ];
-                    
-                    const jobWithMilestones = {
-                        ...foundJob,
-                        milestones
-                    };
-                    
-                    setJob(jobWithMilestones);
-                } else {
-                    showToast('Job not found', 'error');
-                }
+                
+                setJob({
+                    ...foundLocalJob,
+                    milestones
+                });
+                setLoadingJob(false);
+                return;
             }
+
+            // Try to fetch from contract if not found locally
+            try {
+                const result = await getJobContract(jobId);
+                
+                if (result.success && result.result) {
+                    // Parse blockchain result
+                    const jobData = parseJobFromContract(result.result);
+                    setJob(jobData);
+                    setLoadingJob(false);
+                    return;
+                }
+            } catch (contractError) {
+                console.log('Contract job not found, checked localStorage already');
+            }
+            
+            showToast('Job not found', 'error');
         } catch (error: any) {
             console.error('Error fetching job:', error);
             showToast(error.message || 'Failed to fetch job details', 'error');
@@ -180,7 +184,78 @@ export default function FreelancerJobView() {
         setSubmittingProof(milestoneId);
 
         try {
-            // Call smart contract to submit proof
+            // Check if this is a demo job (from localStorage)
+            const storedJobs = localStorage.getItem('yieldra_jobs');
+            const jobs = storedJobs ? JSON.parse(storedJobs) : [];
+            const isDemoJob = jobs.some((j: any) => j.id === job.id);
+            
+            if (isDemoJob) {
+                // This is a demo/localStorage job - save locally without contract call
+                setJob(prevJob => {
+                    if (!prevJob) return null;
+                    return {
+                        ...prevJob,
+                        milestones: prevJob.milestones.map(m =>
+                            m.id === milestoneId
+                                ? { ...m, status: 'submitted', proofUrl, submittedAt: new Date().toISOString() }
+                                : m
+                        )
+                    };
+                });
+
+                // Update localStorage
+                const updatedJobs = jobs.map((j: any) => {
+                    if (j.id === job.id) {
+                        // Generate milestones if they don't exist or aren't an array
+                        const milestonesToUpdate = Array.isArray(j.milestones) 
+                            ? j.milestones 
+                            : [
+                                {
+                                    id: 1,
+                                    title: 'Initial Setup & Planning',
+                                    description: 'Project setup, requirements gathering, and initial planning',
+                                    amount: j.totalAmount * 0.3,
+                                    status: 'pending' as const
+                                },
+                                {
+                                    id: 2,
+                                    title: 'Core Development',
+                                    description: 'Main implementation and development work',
+                                    amount: j.totalAmount * 0.4,
+                                    status: 'pending' as const
+                                },
+                                {
+                                    id: 3,
+                                    title: 'Testing & Deployment',
+                                    description: 'Testing, bug fixes, and final deployment',
+                                    amount: j.totalAmount * 0.3,
+                                    status: 'pending' as const
+                                }
+                            ];
+
+                        return {
+                            ...j,
+                            milestones: milestonesToUpdate.map((m: any) =>
+                                m.id === milestoneId
+                                    ? { ...m, status: 'submitted', proofUrl, submittedAt: new Date().toISOString() }
+                                    : m
+                            )
+                        };
+                    }
+                    return j;
+                });
+                localStorage.setItem('yieldra_jobs', JSON.stringify(updatedJobs));
+                
+                setProofUrls(prev => ({ ...prev, [milestoneId]: '' }));
+                showToast(
+                    '✅ Proof saved! In production, jobs created through the app would be stored on-chain and this would be submitted to the smart contract.',
+                    'success'
+                );
+                setSubmittingProof(null);
+                return;
+            }
+
+            // For contract jobs, call smart contract
             const result = await submitProofContract(
                 address,
                 job.id,
@@ -190,7 +265,7 @@ export default function FreelancerJobView() {
             );
 
             if (result.success) {
-                showToast('Proof submitted successfully!', 'success');
+                showToast('✅ Proof submitted successfully to smart contract!', 'success');
                 
                 // Update local state
                 setJob(prevJob => {
@@ -205,31 +280,32 @@ export default function FreelancerJobView() {
                     };
                 });
 
-                // Update localStorage
-                const storedJobs = localStorage.getItem('yieldra_jobs');
-                const jobs = storedJobs ? JSON.parse(storedJobs) : [];
-                const updatedJobs = jobs.map((j: any) => {
-                    if (j.id === job.id) {
+                setProofUrls(prev => ({ ...prev, [milestoneId]: '' }));
+                await fetchJobDetails();
+            } else {
+                // If contract call fails, check if we should fall back to demo mode
+                if (result.error?.includes('UnreachableCodeReached') || result.error?.includes('InvalidAction')) {
+                    // Job not found on contract - treat as demo job
+                    setJob(prevJob => {
+                        if (!prevJob) return null;
                         return {
-                            ...j,
-                            milestones: j.milestones.map((m: any) =>
+                            ...prevJob,
+                            milestones: prevJob.milestones.map(m =>
                                 m.id === milestoneId
                                     ? { ...m, status: 'submitted', proofUrl, submittedAt: new Date().toISOString() }
                                     : m
                             )
                         };
-                    }
-                    return j;
-                });
-                localStorage.setItem('yieldra_jobs', JSON.stringify(updatedJobs));
+                    });
 
-                // Clear input
-                setProofUrls(prev => ({ ...prev, [milestoneId]: '' }));
-
-                // Optionally refresh job data from blockchain
-                await fetchJobDetails();
-            } else {
-                showToast(result.error || 'Failed to submit proof', 'error');
+                    setProofUrls(prev => ({ ...prev, [milestoneId]: '' }));
+                    showToast(
+                        '✅ Proof saved in demo mode! This job will need to be created on-chain for smart contract submission.',
+                        'success'
+                    );
+                } else {
+                    showToast(result.error || 'Failed to submit proof', 'error');
+                }
             }
         } catch (error: any) {
             console.error('Error submitting proof:', error);

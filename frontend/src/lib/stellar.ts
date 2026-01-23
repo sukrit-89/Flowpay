@@ -10,6 +10,9 @@ import {
 } from '@stellar/stellar-sdk';
 import { config } from './config';
 
+// Re-export SorobanRpc for use in other modules
+export { SorobanRpc };
+
 // Stellar Network Configuration (from environment)
 export const STELLAR_NETWORK = config.network.name;
 export const NETWORK_PASSPHRASE = config.network.name === 'MAINNET' ? Networks.PUBLIC : Networks.TESTNET;
@@ -35,6 +38,31 @@ export const TOKEN_ADDRESSES = {
     KES: config.tokens.KES,
     NGN: config.tokens.NGN,
 };
+
+/**
+ * Convert a string to bytes32 (32-byte array)
+ * Pads or truncates the string as needed to fit 32 bytes
+ */
+export function stringToBytes32(str: string): Uint8Array {
+    // If already 64 hex characters (32 bytes), parse as hex
+    if (/^[0-9a-fA-F]{64}$/.test(str)) {
+        const bytes = new Uint8Array(32);
+        for (let i = 0; i < 32; i++) {
+            bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+        }
+        return bytes;
+    }
+    
+    // Otherwise, convert string to UTF-8 bytes and pad to 32 bytes
+    const encoder = new TextEncoder();
+    const strBytes = encoder.encode(str);
+    const bytes = new Uint8Array(32);
+    
+    // Copy the string bytes into the array, truncating if too long
+    bytes.set(strBytes.slice(0, 32), 0);
+    
+    return bytes;
+}
 
 /**
  * Build a Soroban contract transaction (returns TransactionBuilder for flexibility)

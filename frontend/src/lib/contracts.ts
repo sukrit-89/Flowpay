@@ -4,7 +4,10 @@ import {
     toScVal,
     executeContractCall,
     simulateTransaction,
-    buildContractTransaction
+    buildContractTransaction,
+    stringToBytes32,
+    server,
+    SorobanRpc
 } from './stellar';
 
 /**
@@ -49,8 +52,11 @@ export const submitProofContract = async (
     proofUrl: string,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
+    // Convert jobId string to bytes32
+    const jobIdBytes = stringToBytes32(jobId);
+    
     const params = [
-        toScVal(jobId, 'bytes32'),
+        toScVal(jobIdBytes, 'bytes32'),
         toScVal(milestoneId, 'u32'),
         toScVal(proofUrl, 'string')
     ];
@@ -70,8 +76,11 @@ export const approveMilestoneContract = async (
     milestoneId: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
+    // Convert jobId string to bytes32
+    const jobIdBytes = stringToBytes32(jobId);
+    
     const params = [
-        toScVal(jobId, 'bytes32'),
+        toScVal(jobIdBytes, 'bytes32'),
         toScVal(milestoneId, 'u32')
     ];
 
@@ -90,8 +99,11 @@ export const releasePaymentContract = async (
     milestoneId: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
+    // Convert jobId string to bytes32
+    const jobIdBytes = stringToBytes32(jobId);
+    
     const params = [
-        toScVal(jobId, 'bytes32'),
+        toScVal(jobIdBytes, 'bytes32'),
         toScVal(milestoneId, 'u32')
     ];
 
@@ -106,25 +118,50 @@ export const releasePaymentContract = async (
 
 export const getJobContract = async (jobId: string) => {
     // Read-only call - no signature needed
+    // Silently fail and return null if job not found (common in demo mode)
     try {
+        // Convert jobId string to bytes32
+        const jobIdBytes = stringToBytes32(jobId);
+        
         const tx = await buildContractTransaction(
             CONTRACT_IDS.ESCROW_CORE,
             'get_job',
-            [toScVal(jobId, 'bytes32')],
+            [toScVal(jobIdBytes, 'bytes32')],
             'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF' // Dummy address for read-only
         );
 
         const built = tx.build();
-        const simulated = await simulateTransaction(built);
+        
+        // Simulate without logging errors (this is expected to fail for demo jobs)
+        const simulated = await new Promise<any>((resolve, reject) => {
+            server.simulateTransaction(built)
+                .then(result => {
+                    if (SorobanRpc.Api.isSimulationError(result)) {
+                        // Silently return failure for read-only calls
+                        resolve({ success: false, error: 'Job not found' });
+                    } else {
+                        resolve({ success: true, result });
+                    }
+                })
+                .catch(err => {
+                    // Silently return failure
+                    resolve({ success: false, error: err.message });
+                });
+        });
+
+        if (!simulated.success) {
+            return { success: false, error: 'Job not found on contract' };
+        }
 
         return {
             success: true,
-            result: (simulated as any).returnValue
+            result: (simulated.result as any).returnValue
         };
     } catch (error: any) {
+        // Silently return failure for read-only calls
         return {
             success: false,
-            error: error.message
+            error: 'Job not found on contract'
         };
     }
 };
