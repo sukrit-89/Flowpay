@@ -80,16 +80,18 @@ impl EscrowCore {
         asset_address: Address,
         milestone_count: u32,
     ) -> BytesN<32> {
-        // Generate unique job ID using simple approach
+        // Generate unique job ID
         let mut counter: u32 = env.storage().instance().get(&Symbol::new(&env, "job_counter")).unwrap_or(0);
         counter += 1;
         env.storage().instance().set(&Symbol::new(&env, "job_counter"), &counter);
 
-        // Create job ID from counter
-        let job_id_bytes = counter.to_be_bytes();
-        let mut job_id_array = [0u8; 32];
-        job_id_array[28..].copy_from_slice(&job_id_bytes);
-        let job_id = BytesN::from_array(&env, &job_id_array);
+        let job_id = env.crypto().sha256(&(
+            client.clone(),
+            freelancer.clone(),
+            total_amount,
+            counter,
+            env.ledger().sequence(),
+        ).into_val());
 
         // Create milestones
         let mut milestones = Vec::<Milestone>::new(&env);
@@ -124,8 +126,8 @@ impl EscrowCore {
         let token_client = token::TokenClient::new(&env, &asset_address);
         token_client.transfer(&client, &env.current_contract_address(), &total_amount);
 
-        // Store job principal tracking using simple key
-        let principal_key = Symbol::new(&env, "principal_key");
+        // Store job principal tracking
+        let principal_key = Symbol::new(&env, &format!("principal_{}", job_id.clone()));
         env.storage().instance().set(&principal_key, &total_amount);
 
         job_id
@@ -142,10 +144,13 @@ impl EscrowCore {
         let counter: u32 = env.storage().instance().get(&Symbol::new(&env, "job_counter")).unwrap_or(0);
 
         for i in 1..=counter {
-            let job_id_bytes = i.to_be_bytes();
-            let mut job_id_array = [0u8; 32];
-            job_id_array[28..].copy_from_slice(&job_id_bytes);
-            let job_id = BytesN::from_array(&env, &job_id_array);
+            let job_id = env.crypto().sha256(&(
+                client.clone(),
+                Address::from_string(&String::from_str(&env, "dummy")),
+                0i128,
+                i,
+                0u32,
+            ).into_val());
 
             if let Some(job) = env.storage().instance().get::<_, Job>(&job_id) {
                 if job.client == client {
@@ -163,10 +168,13 @@ impl EscrowCore {
         let counter: u32 = env.storage().instance().get(&Symbol::new(&env, "job_counter")).unwrap_or(0);
 
         for i in 1..=counter {
-            let job_id_bytes = i.to_be_bytes();
-            let mut job_id_array = [0u8; 32];
-            job_id_array[28..].copy_from_slice(&job_id_bytes);
-            let job_id = BytesN::from_array(&env, &job_id_array);
+            let job_id = env.crypto().sha256(&(
+                Address::from_string(&String::from_str(&env, "dummy")),
+                freelancer.clone(),
+                0i128,
+                i,
+                0u32,
+            ).into_val());
 
             if let Some(job) = env.storage().instance().get::<_, Job>(&job_id) {
                 if job.freelancer == freelancer {
@@ -237,7 +245,7 @@ impl EscrowCore {
         token_client.transfer(&env.current_contract_address(), &job.freelancer, &milestone_amount);
 
         // Update principal tracking
-        let principal_key = Symbol::new(&env, "principal_key");
+        let principal_key = Symbol::new(&env, &format!("principal_{}", job_id.clone()));
         let current_principal: i128 = env.storage().instance().get(&principal_key).unwrap_or(0);
         let new_principal = current_principal - milestone_amount;
         env.storage().instance().set(&principal_key, &new_principal);
@@ -262,7 +270,7 @@ impl EscrowCore {
         }
 
         // Calculate refund amount
-        let principal_key = Symbol::new(&env, "principal_key");
+        let principal_key = Symbol::new(&env, &format!("principal_{}", job_id.clone()));
         let refund_amount: i128 = env.storage().instance().get(&principal_key).unwrap_or(0);
 
         // Refund to client

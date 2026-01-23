@@ -31,6 +31,39 @@ impl RwaYieldHarvester {
         let usdc_client = token::TokenClient::new(&env, &usdc_token);
         usdc_client.transfer(&from, &env.current_contract_address(), &usdc_amount);
         
+        Self::process_deposit(env, from, usdc_amount, usdc_token, ousg_token)
+    }
+    
+    /// Deposit from contract (for EscrowCore integration)
+    /// Requires USDC to already be transferred to this contract
+    pub fn deposit_from_contract(
+        env: Env,
+        from_contract: Address,
+        owner: Address, // The actual owner (client) who will receive yield
+        usdc_amount: i128,
+        usdc_token: Address,
+        ousg_token: Address,
+    ) -> i128 {
+        // Verify USDC was already transferred to this contract
+        let usdc_client = token::TokenClient::new(&env, &usdc_token);
+        let balance = usdc_client.balance(&env.current_contract_address());
+        if balance < usdc_amount {
+            panic!("Insufficient USDC transferred to contract");
+        }
+        
+        // Process deposit for the owner (client), not the calling contract
+        Self::process_deposit(env, owner, usdc_amount, usdc_token, ousg_token)
+    }
+    
+    /// Internal: Process deposit and create/update position
+    fn process_deposit(
+        env: Env,
+        owner: Address,
+        usdc_amount: i128,
+        usdc_token: Address,
+        ousg_token: Address,
+    ) -> i128 {
+        
         // Swap USDC for OUSG
         // In production: call OUSG issuer's mint function or use DEX
         // For testnet: simulate 1:1 swap
@@ -42,7 +75,7 @@ impl RwaYieldHarvester {
         );
         
         // Create or update yield position
-        let position_key = (Symbol::new(&env, "position"), from.clone());
+        let position_key = (Symbol::new(&env, "position"), owner.clone());
         
         let position = if let Some(mut existing) = env.storage().persistent().get::<_, YieldPosition>(&position_key) {
             // Update existing position
@@ -52,7 +85,7 @@ impl RwaYieldHarvester {
         } else {
             // Create new position
             YieldPosition {
-                owner: from.clone(),
+                owner: owner.clone(),
                 principal: usdc_amount,
                 ousg_balance: ousg_amount,
                 deposited_at: env.ledger().timestamp(),
@@ -66,7 +99,7 @@ impl RwaYieldHarvester {
         // Emit event
         env.events().publish(
             (Symbol::new(&env, "deposit"),),
-            (from, usdc_amount, ousg_amount)
+            (owner, usdc_amount, ousg_amount)
         );
         
         ousg_amount
@@ -170,6 +203,88 @@ impl RwaYieldHarvester {
         env.events().publish(
             (Symbol::new(&env, "withdraw"),),
             (owner, ousg_amount, usdc_amount)
+        );
+        
+        usdc_amount
+    }
+    
+    /// Withdraw only principal amount (in USDC terms) without harvesting yield
+    /// This allows withdrawing principal while leaving accrued yield in the position
+    pub fn withdraw_principal(
+        env: Env,
+        owner: Address,
+        usdc_principal_amount: i128,
+        ousg_token: Address,
+        usdc_token: Address,
+    ) -> i128 {
+        owner.require_auth();
+        Self::withdraw_principal_internal(env, owner, usdc_principal_amount, owner.clone(), ousg_token, usdc_token)
+    }
+    
+    /// Withdraw principal on behalf of owner (for EscrowCore integration)
+    /// Transfers USDC to recipient (EscrowCore) instead of owner
+    pub fn withdraw_principal_for_owner(
+        env: Env,
+        owner: Address,
+        usdc_principal_amount: i128,
+        recipient: Address, // Where to send USDC (usually EscrowCore)
+        ousg_token: Address,
+        usdc_token: Address,
+    ) -> i128 {
+        // In production, verify calling contract is EscrowCore
+        // For now, allow any contract call (can add whitelist later)
+        Self::withdraw_principal_internal(env, owner, usdc_principal_amount, recipient, ousg_token, usdc_token)
+    }
+    
+    /// Internal: Withdraw principal logic
+    fn withdraw_principal_internal(
+        env: Env,
+        owner: Address,
+        usdc_principal_amount: i128,
+        recipient: Address,
+        ousg_token: Address,
+        usdc_token: Address,
+    ) -> i128 {
+        
+        let position_key = (Symbol::new(&env, "position"), owner.clone());
+        let mut position: YieldPosition = env.storage().persistent().get(&position_key).unwrap();
+        
+        // Ensure we have enough principal to withdraw
+        if position.principal < usdc_principal_amount {
+            panic!("Insufficient principal balance");
+        }
+        
+        // Calculate how much OUSG corresponds to this principal amount
+        // Since we use 1:1 ratio for simplicity, principal_amount = ousg_amount
+        // In production, this would account for OUSG price changes
+        let ousg_to_withdraw = usdc_principal_amount;
+        
+        // Ensure sufficient OUSG balance
+        if position.ousg_balance < ousg_to_withdraw {
+            panic!("Insufficient OUSG balance");
+        }
+        
+        // Redeem OUSG for USDC (1:1 for mock)
+        let usdc_amount = Self::redeem_ousg_to_usdc(
+            env.clone(),
+            ousg_token,
+            usdc_token.clone(),
+            ousg_to_withdraw
+        );
+        
+        // Transfer USDC to recipient (EscrowCore)
+        let usdc_client = token::TokenClient::new(&env, &usdc_token);
+        usdc_client.transfer(&env.current_contract_address(), &recipient, &usdc_amount);
+        
+        // Update position: reduce principal and OUSG balance
+        position.principal -= usdc_principal_amount;
+        position.ousg_balance -= ousg_to_withdraw;
+        env.storage().persistent().set(&position_key, &position);
+        
+        // Emit event
+        env.events().publish(
+            (Symbol::new(&env, "principal_withdrawn"),),
+            (owner, usdc_principal_amount, usdc_amount, recipient)
         );
         
         usdc_amount

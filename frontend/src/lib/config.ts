@@ -25,14 +25,14 @@ export const config = {
 
     // Contract Addresses - Updated to match deployed contracts
     contracts: {
-        escrowCore: getEnvVar('VITE_CONTRACT_ESCROW_CORE', true) || 'CA63NBJU756G7ZKSFUVXEKALCI7MVO6WXSGDY2CUQGY26LWGWWGTBHQ7',
+        escrowCore: getEnvVar('VITE_CONTRACT_ESCROW_CORE', true) || 'CCWUY2KH27LZ6F4T24TH7GBMCPMJJZ23QEU6OAUDEI5Z4PHUEVCLXZLM',
         liquidityRouter: getEnvVar('VITE_CONTRACT_LIQUIDITY_ROUTER', true) || 'CCCYIVHMEBEY5TGZYKV3DFPYR4OG3HZXBT5MFFNJUDLF7ZZEGCVZMIAX',
         yieldHarvester: getEnvVar('VITE_CONTRACT_YIELD_HARVESTER', true) || 'CDYLM2I4J6K57CDK3AFZXKL4H4QTKECSEKRNALY6U6TA7ODPQCS35PPX',
     },
 
-    // Token Addresses - Added common testnet fallbacks
+    // Token Addresses - Updated to match deployed contracts
     tokens: {
-        USDC: getEnvVar('VITE_TOKEN_USDC', true) || 'GBBD47F6QVJKKQHLGOBFYI6J2XEEQP4AJYEVYZZNGQKEBHQY7T3S6Y5',
+        USDC: getEnvVar('VITE_TOKEN_USDC', true) || 'CD7DQDYYBFGAJKVB4MUQMGTIG47PAVEFNVU5CGULJNACG4ZRB65EUL5T',
         XLM: getEnvVar('VITE_TOKEN_XLM', true) || 'XLM',
         OUSG: getEnvVar('VITE_TOKEN_OUSG'),
         INR: getEnvVar('VITE_TOKEN_INR'),
