@@ -124,7 +124,18 @@ impl EscrowCore {
         let token_client = token::TokenClient::new(&env, &asset_address);
         token_client.transfer(&client, &env.current_contract_address(), &total_amount);
 
-        // Store job principal tracking using simple key
+        // Deposit into YieldHarvester for yield generation
+        let yield_harvester = Self::get_yield_harvester(&env);
+        let mut args = Vec::new(&env);
+        args.push_back(client.clone().into_val(&env));
+        args.push_back(total_amount.into_val(&env));
+        env.invoke_contract::<()>(
+            &yield_harvester,
+            &Symbol::new(&env, "deposit"),
+            args,
+        );
+
+        // Store job principal tracking
         let principal_key = Symbol::new(&env, "principal_key");
         env.storage().instance().set(&principal_key, &total_amount);
 
@@ -232,6 +243,17 @@ impl EscrowCore {
             panic!("milestone not found");
         }
 
+        // Withdraw from YieldHarvester (principal + yield)
+        let yield_harvester = Self::get_yield_harvester(&env);
+        let mut args = Vec::new(&env);
+        args.push_back(job.client.clone().into_val(&env));
+        args.push_back(milestone_amount.into_val(&env));
+        let total_withdraw = env.invoke_contract::<i128>(
+            &yield_harvester,
+            &Symbol::new(&env, "withdraw"),
+            args,
+        );
+
         // Transfer payment to freelancer
         let token_client = token::TokenClient::new(&env, &job.asset_address);
         token_client.transfer(&env.current_contract_address(), &job.freelancer, &milestone_amount);
@@ -251,6 +273,27 @@ impl EscrowCore {
             job.status = JobStatus::Completed;
             env.storage().instance().set(&job_id, &job);
         }
+    }
+
+    /// Get YieldHarvester address
+    fn get_yield_harvester(env: &Env) -> Address {
+        env.storage().instance()
+            .get(&Symbol::new(env, "yield_harvester"))
+            .unwrap()
+    }
+
+    /// Get LiquidityRouter address
+    fn get_liquidity_router(env: &Env) -> Address {
+        env.storage().instance()
+            .get(&Symbol::new(env, "liquidity_router"))
+            .unwrap()
+    }
+
+    /// Get USDC token address
+    fn get_usdc_token(env: &Env) -> Address {
+        env.storage().instance()
+            .get(&Symbol::new(env, "usdc_token"))
+            .unwrap()
     }
 
     /// Cancel job and refund client

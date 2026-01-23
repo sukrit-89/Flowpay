@@ -1,5 +1,5 @@
 [package]
-name = "liquidity_router"
+name = "yield_harvester"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,7 +21,3 @@ debug-assertions = false
 panic = "abort"
 codegen-units = 1
 lto = true
-
-[profile.release-with-logs]
-inherits = "release"
-debug-assertions = true
