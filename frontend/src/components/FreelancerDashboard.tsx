@@ -212,7 +212,8 @@ export default function FreelancerDashboard() {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.1 }}
                                                 whileHover={{ scale: 1.01, x: 4 }}
-                                                className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all"
+                                                className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                                                onClick={() => navigate(`/freelancer/job/${job.id}`)}
                                             >
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className="flex-1">
@@ -249,9 +250,13 @@ export default function FreelancerDashboard() {
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/freelancer/job/${job.id}`);
+                                                    }}
                                                     className="w-full py-3 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/50 transition-all"
                                                 >
-                                                    Submit Proposal →
+                                                    View Job Details →
                                                 </motion.button>
                                             </motion.div>
                                         ))}
@@ -334,6 +339,7 @@ export default function FreelancerDashboard() {
                                                 </div>
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
+                                                    onClick={() => navigate(`/freelancer/job/${contract.id}`)}
                                                     className="w-full py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30"
                                                 >
                                                     Submit Milestone Proof

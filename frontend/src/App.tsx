@@ -8,6 +8,7 @@ import ClientSettings from './components/client/ClientSettings';
 import FreelancerJobs from './components/freelancer/FreelancerJobs';
 import FreelancerWallet from './components/freelancer/FreelancerWallet';
 import FreelancerSettings from './components/freelancer/FreelancerSettings';
+import FreelancerJobView from './components/freelancer/FreelancerJobView';
 import JobDetails from './components/client/JobDetails';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
                     <Route path="/client/settings" element={<ClientSettings />} />
                     <Route path="/freelancer" element={<FreelancerDashboard />} />
                     <Route path="/freelancer/jobs" element={<FreelancerJobs />} />
+                    <Route path="/freelancer/job/:jobId" element={<FreelancerJobView />} />
                     <Route path="/freelancer/wallet" element={<FreelancerWallet />} />
                     <Route path="/freelancer/settings" element={<FreelancerSettings />} />
                 </Routes>
