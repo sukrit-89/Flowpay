@@ -22,8 +22,10 @@ export const createJobContract = async (
     milestoneCount: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
-    // For XLM, use native token handling
-    const assetAddress = assetType === 'XLM' ? 'XLM' : TOKEN_ADDRESSES[assetType];
+    // For XLM, use native token address, otherwise use token contract address
+    const assetAddress = assetType === 'XLM' 
+        ? 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF' // Native XLM address
+        : TOKEN_ADDRESSES[assetType];
     const amountStroops = assetType === 'XLM' 
         ? Math.floor(totalAmount * 10_000_000) // XLM uses 7 decimals
         : Math.floor(totalAmount * 1_000_000); // USDC uses 6 decimals
@@ -32,7 +34,7 @@ export const createJobContract = async (
         toScVal(clientAddress, 'address'),
         toScVal(freelancerAddress, 'address'),
         toScVal(amountStroops, 'i128'),
-        toScVal(assetAddress, assetType === 'XLM' ? 'string' : 'address'),
+        toScVal(assetAddress, 'address'), // Always pass as address
         toScVal(milestoneCount, 'u32')
     ];
 

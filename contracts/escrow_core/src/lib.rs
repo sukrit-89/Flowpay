@@ -121,8 +121,14 @@ impl EscrowCore {
         env.storage().instance().set(&job_id, &job);
 
         // Transfer funds to contract
-        let token_client = token::TokenClient::new(&env, &asset_address);
-        token_client.transfer(&client, &env.current_contract_address(), &total_amount);
+        if asset_address != Address::from_string(&soroban_sdk::String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")) {
+            // Only transfer token contracts, not native XLM
+            let token_client = token::TokenClient::new(&env, &asset_address);
+            token_client.transfer(&client, &env.current_contract_address(), &total_amount);
+        } else {
+            // For XLM, the transfer happens automatically when the transaction is submitted
+            // The amount will be included in the transaction fee
+        }
 
         // Deposit into YieldHarvester for yield generation
         let yield_harvester = Self::get_yield_harvester(&env);
