@@ -32,7 +32,7 @@ export const config = {
 
     // Token Addresses - Updated to match deployed contracts
     tokens: {
-        USDC: getEnvVar('VITE_TOKEN_USDC', true) || 'CD7DQDYYBFGAJKVB4MUQMGTIG47PAVEFNVU5CGULJNACG4ZRB65EUL5T',
+        USDC: getEnvVar('VITE_TOKEN_USDC', true) || 'CBADGWL7O63B7Y5GAJPQPAXHVSXH65QKM6KVPQGFPJHUSPD5ATFYWDPG',
         XLM: getEnvVar('VITE_TOKEN_XLM', true) || 'XLM',
         OUSG: getEnvVar('VITE_TOKEN_OUSG'),
         INR: getEnvVar('VITE_TOKEN_INR'),
