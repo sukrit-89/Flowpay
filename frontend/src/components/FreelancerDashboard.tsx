@@ -12,7 +12,7 @@ interface Job {
     title: string;
     description: string;
     totalAmount: number;
-    milestones: number;
+    milestones: any[] | number;  // Can be array or number
     status: 'pending' | 'in_progress' | 'completed';
     freelancerAddress: string;
     clientAddress: string;

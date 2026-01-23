@@ -13,7 +13,7 @@ interface Job {
     title: string;
     description: string;
     totalAmount: number;
-    milestones: number;
+    milestones: any[] | number;  // Can be array or number
     status: 'pending' | 'in_progress' | 'completed';
     freelancerAddress: string;
     clientAddress: string;
@@ -214,7 +214,7 @@ export default function ClientDashboard() {
 
                                                 <div className="flex gap-2">
                                                     <span className="px-3 py-1 bg-teal-500/20 text-teal-400 rounded-full text-sm">
-                                                        {job.milestones} milestones
+                                                        {Array.isArray(job.milestones) ? job.milestones.length : job.milestones} milestones
                                                     </span>
                                                     <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
                                                         ${job.totalAmount} budget
