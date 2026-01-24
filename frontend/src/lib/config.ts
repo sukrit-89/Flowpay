@@ -5,7 +5,7 @@
 
 // Helper to get env variable with validation
 function getEnvVar(key: string, required: boolean = false): string {
-    const value = import.meta.env[key];
+    const value = (import.meta as any).env[key];
 
     if (required && !value) {
         throw new Error(`Missing required environment variable: ${key}`);
@@ -25,9 +25,9 @@ export const config = {
 
     // Contract Addresses - Updated to match deployed contracts
     contracts: {
-        escrowCore: getEnvVar('VITE_CONTRACT_ESCROW_CORE', true) || 'CA4D44S2I7IIDMR3PB6HUMM3OUAOJ5CQ6A2KI55YX3646JV2U3RO3YEA',
-        liquidityRouter: getEnvVar('VITE_CONTRACT_LIQUIDITY_ROUTER', true) || 'CAEWF74SAM7FDS6SDY5CYLVTYJ3AHOC3UYRUJQAHQ54FS3UK6OMIVFW4',
-        yieldHarvester: getEnvVar('VITE_CONTRACT_YIELD_HARVESTER', true) || 'CARLAQ4AFPRCQPX5VL7NV5JA36YMAFDUOK7DQMAPNVUPOSVTOQHHUN53',
+        escrowCore: getEnvVar('VITE_CONTRACT_ESCROW_CORE', true) || 'CCK5VICBIWM245Q5TLB2FXCJYKVPTLIIB4HO2QPESG7TOF3ZPCZRKCVA',
+        liquidityRouter: getEnvVar('VITE_CONTRACT_LIQUIDITY_ROUTER', true) || 'CDTDGS22DS33NPH2GNE4UWPYEJD57MJN6DTPDZXLD46SIKNNCYNKNA3A',
+        yieldHarvester: getEnvVar('VITE_CONTRACT_YIELD_HARVESTER', true) || 'CBMU2XVMEJWJTXZBACTBJRGCFPXJCGUNT2VEENSVPN63G4MSMUDRBSMC',
     },
 
     // Token Addresses - Updated to match deployed contracts

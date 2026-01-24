@@ -7,8 +7,58 @@ import {
     buildContractTransaction,
     stringToBytes32,
     server,
-    SorobanRpc
+    SorobanRpc,
+    xdr
 } from './stellar';
+
+/**
+ * Get the current job counter from the contract
+ * This tells us how many jobs have been created
+ */
+export const getJobCounter = async (): Promise<number> => {
+    try {
+        const tx = await buildContractTransaction(
+            CONTRACT_IDS.ESCROW_CORE,
+            'get_job_counter',
+            [],
+            'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
+        );
+
+        const built = tx.build();
+        const simResult = await server.simulateTransaction(built);
+        
+        if (SorobanRpc.Api.isSimulationError(simResult)) {
+            console.error('Simulation error getting job counter:', simResult);
+            return 0;
+        }
+
+        // Extract the result
+        const simSuccess = simResult as SorobanRpc.Api.SimulateTransactionSuccessResponse;
+        if (simSuccess.result) {
+            const retval = (simSuccess.result as any).retval;
+            if (retval) {
+                // u32 value
+                const val = retval._value !== undefined ? Number(retval._value) : 0;
+                console.log('📊 Current job counter:', val);
+                return val;
+            }
+        }
+        return 0;
+    } catch (e) {
+        console.warn('Could not get job counter:', e);
+        return 0;
+    }
+};
+
+/**
+ * Compute job_id from counter (1-based)
+ * On-chain format: 32 bytes with counter at end (big-endian u32 in last 4 bytes)
+ */
+export const computeJobId = (counter: number): string => {
+    // counter as big-endian 4-byte hex, padded to 64 chars total
+    const counterHex = counter.toString(16).padStart(8, '0');
+    return '0'.repeat(56) + counterHex;
+};
 
 /**
  * Escrow Core Contract Interactions
@@ -22,10 +72,14 @@ export const createJobContract = async (
     milestoneCount: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
-    // For XLM, use native token address, otherwise use token contract address
-    const assetAddress = assetType === 'XLM' 
-        ? 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF' // Native XLM address
-        : TOKEN_ADDRESSES[assetType];
+    // Get current job counter BEFORE creating job
+    // After creation, the new job will have counter = previousCounter + 1
+    const previousCounter = await getJobCounter();
+    const expectedJobId = computeJobId(previousCounter + 1);
+    console.log('📊 Expected job_id after creation:', expectedJobId);
+    
+    // Use proper token addresses for both USDC and XLM (wrapped native)
+    const assetAddress = TOKEN_ADDRESSES[assetType];
     const amountStroops = assetType === 'XLM' 
         ? Math.floor(totalAmount * 10_000_000) // XLM uses 7 decimals
         : Math.floor(totalAmount * 1_000_000); // USDC uses 6 decimals
@@ -38,13 +92,39 @@ export const createJobContract = async (
         toScVal(milestoneCount, 'u32')
     ];
 
-    return await executeContractCall(
+    const result = await executeContractCall(
         CONTRACT_IDS.ESCROW_CORE,
         'create_job',
         params,
         clientAddress,
         signTransaction
     );
+
+    // Check for trustline error and provide helpful message
+    if (!result.success && result.error) {
+        const errorMsg = result.error.toLowerCase();
+        if (errorMsg.includes('trustline') || errorMsg.includes('contract, #13')) {
+            return {
+                success: false,
+                error: `⚠️ USDC Not Added to Wallet\n\nYou need to add USDC to your Freighter wallet first.\n\nSteps:\n1. Open Freighter → Manage Assets\n2. Add USDC with address:\nCBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA\n\nTip: You can also use XLM which doesn't require this step!`
+            };
+        }
+    }
+
+    // If successful, use the pre-computed expected job_id
+    // This is the most reliable way since the contract counter was read before the transaction
+    if (result.success) {
+        console.log('✅ Job created successfully! Using computed job_id:', expectedJobId);
+        return {
+            ...result,
+            jobId: expectedJobId, // Use the pre-computed job_id
+        } as any;
+    }
+
+    return {
+        ...result,
+        jobId: result.txHash, // Fallback to txHash if job creation failed
+    } as any;
 };
 
 export const submitProofContract = async (
@@ -101,6 +181,13 @@ export const releasePaymentContract = async (
     milestoneId: number,
     signTransaction: (xdr: string, networkPassphrase: string) => Promise<{ success: boolean; signedXdr?: string; error?: string }>
 ) => {
+    console.log('💰 === RELEASE PAYMENT INITIATED ===');
+    console.log('Client:', clientAddress);
+    console.log('Job ID:', jobId);
+    console.log('Milestone:', milestoneId);
+    console.log('Escrow Contract:', CONTRACT_IDS.ESCROW_CORE);
+    console.log('YieldHarvester Contract:', CONTRACT_IDS.YIELD_HARVESTER);
+
     // Convert jobId string to bytes32
     const jobIdBytes = stringToBytes32(jobId);
     
@@ -109,13 +196,97 @@ export const releasePaymentContract = async (
         toScVal(milestoneId, 'u32')
     ];
 
-    return await executeContractCall(
+    const result = await executeContractCall(
         CONTRACT_IDS.ESCROW_CORE,
         'release_payment',
         params,
         clientAddress,
         signTransaction
     );
+
+    if (result.success) {
+        console.log('✅ Payment released! TX:', result.txHash);
+        console.log('🔗 View on explorer: https://stellar.expert/explorer/testnet/tx/' + result.txHash);
+    } else {
+        console.error('❌ Payment release failed:', result.error);
+    }
+
+    return result;
+};
+
+// Fetch all jobs for a client (read-only)
+export const getClientJobsContract = async (clientAddress: string) => {
+    try {
+        console.log('📋 Fetching on-chain jobs for client:', clientAddress);
+        const tx = await buildContractTransaction(
+            CONTRACT_IDS.ESCROW_CORE,
+            'get_client_jobs',
+            [toScVal(clientAddress, 'address')],
+            'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
+        );
+
+        const built = tx.build();
+        const simResult = await server.simulateTransaction(built);
+        
+        if (SorobanRpc.Api.isSimulationError(simResult)) {
+            console.error('Simulation error:', simResult);
+            return { success: false, error: 'Simulation error' };
+        }
+
+        // Get the result from simulation - check multiple possible locations
+        const simSuccess = simResult as SorobanRpc.Api.SimulateTransactionSuccessResponse;
+        console.log('📋 Simulation result keys:', Object.keys(simSuccess));
+        console.log('📋 Full simSuccess:', JSON.stringify(simSuccess, (key, value) => {
+            if (typeof value === 'bigint') return value.toString();
+            if (value instanceof Uint8Array) return Array.from(value);
+            return value;
+        }, 2).substring(0, 2000));
+        
+        // The result is in simSuccess.result which contains retval (not returnValue)
+        let returnValue: any;
+        
+        // Method 1: Check result.retval
+        if (simSuccess.result && (simSuccess.result as any).retval) {
+            returnValue = (simSuccess.result as any).retval;
+            console.log('📋 Found result.retval');
+        }
+        // Method 2: Check result.results array
+        else if (simSuccess.result && Array.isArray((simSuccess.result as any).results)) {
+            const results = (simSuccess.result as any).results;
+            if (results.length > 0 && results[0].xdr) {
+                // Decode XDR
+                const { xdr } = await import('@stellar/stellar-sdk');
+                const scVal = xdr.ScVal.fromXDR(results[0].xdr, 'base64');
+                returnValue = scVal;
+                console.log('📋 Found result.results[0].xdr');
+            }
+        }
+        // Method 3: Direct result property (older SDK)
+        else if (simSuccess.result) {
+            returnValue = simSuccess.result;
+            console.log('📋 Using direct result');
+        }
+        
+        // Try to decode
+        if (returnValue) {
+            try {
+                const { scValToNative } = await import('./stellar');
+                const decoded = scValToNative(returnValue);
+                console.log('📋 Decoded on-chain jobs:', JSON.stringify(decoded, null, 2));
+                return { success: true, result: decoded };
+            } catch (e) {
+                console.warn('Could not decode ScVal:', e);
+            }
+        }
+
+        // Fallback: manually fetch via CLI-style approach
+        // Return empty array if we can't decode
+        console.log('📋 Could not get jobs from simulation, will use hardcoded job_id');
+        return { success: false, error: 'Could not decode simulation result' };
+    } catch (error: any) {
+        console.error('Failed to fetch client jobs:', error);
+        return { success: false, error: error.message };
+    }
 };
 
 export const getJobContract = async (jobId: string) => {

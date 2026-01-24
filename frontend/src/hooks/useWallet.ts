@@ -30,7 +30,7 @@ export function useWallet() {
 
                     // Try to restore previous connection from localStorage
                     const savedAddress = localStorage.getItem('yieldra_wallet_address');
-                    if (savedAddress && attemptNum === 1) {
+                    if (savedAddress) {
                         console.log('🔄 Restoring previous wallet connection...');
                         setAddress(savedAddress);
                         setConnected(true);

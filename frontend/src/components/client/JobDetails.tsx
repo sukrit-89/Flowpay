@@ -85,6 +85,18 @@ export default function JobDetails() {
                             }
                         ]
                     };
+                    
+                    // Check if all milestones are paid and update status if needed
+                    const allPaid = jobWithMilestones.milestones.every((m: any) => m.status === 'paid');
+                    if (allPaid && jobWithMilestones.status !== 'completed') {
+                        jobWithMilestones.status = 'completed';
+                        // Update in localStorage
+                        const updatedJobs = jobs.map((j: any) => 
+                            j.id === jobId ? jobWithMilestones : j
+                        );
+                        localStorage.setItem('yieldra_jobs', JSON.stringify(updatedJobs));
+                    }
+                    
                     setJob(jobWithMilestones);
                 } else {
                     setJob(null);
@@ -142,15 +154,41 @@ export default function JobDetails() {
             
             if (result.success) {
                 showToast('Payment released successfully!', 'success');
+                
                 // Update local state
-                setJob(prev => prev ? {
-                    ...prev,
-                    milestones: prev.milestones.map(m => 
+                const updatedJob = {
+                    ...job,
+                    milestones: job.milestones.map(m => 
                         m.id === milestoneId 
-                            ? { ...m, status: 'paid' }
+                            ? { ...m, status: 'paid' as const }
                             : m
                     )
-                } : null);
+                };
+                
+                // Check if all milestones are paid
+                const allPaid = updatedJob.milestones.every(m => m.status === 'paid');
+                if (allPaid) {
+                    updatedJob.status = 'completed';
+                }
+                
+                setJob(updatedJob);
+                
+                // Update in localStorage
+                const storedJobs = localStorage.getItem('yieldra_jobs');
+                if (storedJobs) {
+                    const jobs = JSON.parse(storedJobs);
+                    const updatedJobs = jobs.map((j: any) => 
+                        j.id === job.id ? updatedJob : j
+                    );
+                    localStorage.setItem('yieldra_jobs', JSON.stringify(updatedJobs));
+                }
+                
+                // If job is completed, show success message
+                if (allPaid) {
+                    setTimeout(() => {
+                        showToast('🎉 All milestones completed! Job is now complete.', 'success');
+                    }, 1500);
+                }
             } else {
                 showToast(`Failed to release payment: ${result.error}`, 'error');
             }
@@ -258,8 +296,14 @@ export default function JobDetails() {
                             <div className="text-4xl font-bold text-indigo-600 mb-3">
                                 ${job.totalAmount.toFixed(2)}
                             </div>
-                            <div className="inline-block px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold">
-                                ✓ Active
+                            <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
+                                job.status === 'completed' 
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : job.status === 'in_progress'
+                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            }`}>
+                                {job.status === 'completed' ? '✓ Completed' : job.status === 'in_progress' ? '⚙️ In Progress' : '⏳ Active'}
                             </div>
                         </div>
                     </div>

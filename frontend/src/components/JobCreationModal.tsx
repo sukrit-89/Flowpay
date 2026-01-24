@@ -40,13 +40,14 @@ export default function JobCreationModal({ isOpen, onClose, onJobCreated }: JobC
                 freelancerAddress,
                 parseFloat(totalAmount),
                 milestones,
-                'USDC'  // Changed to USDC for better stability
+                'XLM'  // Using XLM - no trustline required!
             );
 
             if (result.success) {
+                const resolvedJobId = (result as any).jobId || result.txHash || `job-${Date.now()}`;
                 // Save job to localStorage for demo purposes
                 const newJob = {
-                    id: result.txHash || `job-${Date.now()}`,
+                    id: resolvedJobId,
                     title: jobTitle,
                     description: jobDescription,
                     totalAmount: parseFloat(totalAmount),
@@ -80,7 +81,8 @@ export default function JobCreationModal({ isOpen, onClose, onJobCreated }: JobC
                 // Refresh the jobs list by dispatching a custom event
                 window.dispatchEvent(new CustomEvent('jobCreated', { detail: { job: newJob } }));
             } else {
-                alert(`Failed to create job: ${result.error}`);
+                // Show error message - it's already formatted if it's a trustline error
+                alert(result.error || 'Failed to create job');
             }
         } catch (err: any) {
             alert(`Error: ${err.message}`);

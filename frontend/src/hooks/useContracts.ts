@@ -5,6 +5,7 @@ import {
     approveMilestoneContract,
     releasePaymentContract,
     getJobContract,
+    getClientJobsContract,
     getExchangeRate,
     calculateYield,
     depositForYield,
@@ -45,9 +46,14 @@ export function useContracts() {
                 throw new Error(result.error || 'Failed to create job');
             }
 
+            // The jobId is now computed in createJobContract using the job counter
+            // No need to fetch from contract - we already have the correct on-chain job_id
+            const resolvedJobId = (result as any).jobId || result.txHash;
+            console.log('✅ createJob: Using job_id =', resolvedJobId);
+
             return {
                 success: true,
-                jobId: result.txHash, // Use tx hash as job ID for now
+                jobId: resolvedJobId,
                 txHash: result.txHash
             };
         } catch (err: any) {
@@ -100,7 +106,12 @@ export function useContracts() {
             // Check if this is a demo job (from localStorage)
             const storedJobs = localStorage.getItem('yieldra_jobs');
             const jobs = storedJobs ? JSON.parse(storedJobs) : [];
-            const isDemoJob = jobs.some((j: any) => j.id === jobId);
+            const isDemoJob = jobs.some((j: any) => {
+                if (j.id !== jobId) return false;
+                const idStr = String(j.id || '').toLowerCase();
+                const txStr = String(j.txHash || '').toLowerCase();
+                return !j.txHash || idStr.startsWith('demo_') || txStr.startsWith('demo_');
+            });
 
             if (isDemoJob) {
                 // This is a demo job - just update locally without contract call
@@ -147,10 +158,30 @@ export function useContracts() {
                 return { success: true, txHash: 'demo_' + Date.now() };
             }
 
-            // For contract jobs, call the smart contract
+            // For contract jobs, the job.id should now be the correct on-chain job_id
+            // (64 hex chars format like 0000000000000000000000000000000000000000000000000000000000000001)
+            // If it's already in this format, use it directly. Otherwise it's a legacy job.
+            let onchainJobId = jobId;
+            
+            // Check if jobId is in the correct on-chain format (64 hex chars)
+            const isValidOnchainFormat = /^[0-9a-fA-F]{64}$/.test(jobId);
+            console.log('🔍 approveMilestone: jobId =', jobId, ', isValidFormat =', isValidOnchainFormat);
+            
+            if (!isValidOnchainFormat) {
+                console.warn('⚠️ approveMilestone: Legacy job format detected. Please clear localStorage and create a new job.');
+                // For legacy jobs, try to find the on-chain job_id from the stored data
+                const job = jobs.find((j: any) => j.id === jobId);
+                if (job && job.onchainJobId) {
+                    onchainJobId = job.onchainJobId;
+                } else {
+                    throw new Error('Legacy job detected - please clear localStorage (Application > Storage > Local Storage > Clear) and create a new job to test the flow.');
+                }
+            }
+
+            console.log('✅ approveMilestone: Calling contract with job_id =', onchainJobId, ', milestone =', milestoneId);
             const result = await approveMilestoneContract(
                 address,
-                jobId,
+                onchainJobId,
                 milestoneId,
                 signTransaction
             );
@@ -225,7 +256,12 @@ export function useContracts() {
             // Check if this is a demo job (from localStorage)
             const storedJobs = localStorage.getItem('yieldra_jobs');
             const jobs = storedJobs ? JSON.parse(storedJobs) : [];
-            const isDemoJob = jobs.some((j: any) => j.id === jobId);
+            const isDemoJob = jobs.some((j: any) => {
+                if (j.id !== jobId) return false;
+                const idStr = String(j.id || '').toLowerCase();
+                const txStr = String(j.txHash || '').toLowerCase();
+                return !j.txHash || idStr.startsWith('demo_') || txStr.startsWith('demo_');
+            });
 
             if (isDemoJob) {
                 // This is a demo job - just update locally without contract call
@@ -272,10 +308,28 @@ export function useContracts() {
                 return { success: true, txHash: 'demo_' + Date.now() };
             }
 
-            // For contract jobs, call the smart contract
+            // For contract jobs, the job.id should now be the correct on-chain job_id
+            let onchainJobId = jobId;
+            
+            // Check if jobId is in the correct on-chain format (64 hex chars)
+            const isValidOnchainFormat = /^[0-9a-fA-F]{64}$/.test(jobId);
+            console.log('🔍 releasePayment: jobId =', jobId, ', isValidFormat =', isValidOnchainFormat);
+            
+            if (!isValidOnchainFormat) {
+                console.warn('⚠️ releasePayment: Legacy job format detected. Please clear localStorage and create a new job.');
+                // For legacy jobs, try to find the on-chain job_id from the stored data
+                const job = jobs.find((j: any) => j.id === jobId);
+                if (job && job.onchainJobId) {
+                    onchainJobId = job.onchainJobId;
+                } else {
+                    throw new Error('Legacy job detected - please clear localStorage (Application > Storage > Local Storage > Clear) and create a new job to test the flow.');
+                }
+            }
+
+            console.log('💰 releasePayment: Calling contract with job_id =', onchainJobId, ', milestone =', milestoneId);
             const result = await releasePaymentContract(
                 address,
-                jobId,
+                onchainJobId,
                 milestoneId,
                 signTransaction
             );

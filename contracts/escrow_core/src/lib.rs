@@ -80,6 +80,9 @@ impl EscrowCore {
         asset_address: Address,
         milestone_count: u32,
     ) -> BytesN<32> {
+        // Require client authorization for this transaction
+        client.require_auth();
+        
         // Generate unique job ID using simple approach
         let mut counter: u32 = env.storage().instance().get(&Symbol::new(&env, "job_counter")).unwrap_or(0);
         counter += 1;
@@ -120,24 +123,28 @@ impl EscrowCore {
         // Store job
         env.storage().instance().set(&job_id, &job);
 
-        // Transfer funds to contract
-        if asset_address != Address::from_string(&soroban_sdk::String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")) {
-            // Only transfer token contracts, not native XLM
-            let token_client = token::TokenClient::new(&env, &asset_address);
-            token_client.transfer(&client, &env.current_contract_address(), &total_amount);
-        } else {
-            // For XLM, the transfer happens automatically when the transaction is submitted
-            // The amount will be included in the transaction fee
-        }
-
-        // Deposit into YieldHarvester for yield generation
+        // Transfer funds directly from client to YieldHarvester using invoke_contract
         let yield_harvester = Self::get_yield_harvester(&env);
+        
+        // Use invoke_contract to transfer tokens from client to yield_harvester
+        let mut transfer_args = Vec::new(&env);
+        transfer_args.push_back(client.clone().into_val(&env));
+        transfer_args.push_back(yield_harvester.clone().into_val(&env));
+        transfer_args.push_back(total_amount.into_val(&env));
+        env.invoke_contract::<()>(
+            &asset_address,
+            &Symbol::new(&env, "transfer"),
+            transfer_args,
+        );
+        
+        // Track deposit in YieldHarvester
         let mut args = Vec::new(&env);
-        args.push_back(client.clone().into_val(&env));
+        args.push_back(env.current_contract_address().into_val(&env));
         args.push_back(total_amount.into_val(&env));
+        args.push_back(asset_address.clone().into_val(&env));
         env.invoke_contract::<()>(
             &yield_harvester,
-            &Symbol::new(&env, "deposit"),
+            &Symbol::new(&env, "track_deposit"),
             args,
         );
 
@@ -151,6 +158,11 @@ impl EscrowCore {
     /// Get job details
     pub fn get_job(env: Env, job_id: BytesN<32>) -> Job {
         env.storage().instance().get(&job_id).unwrap_or_else(|| panic!("job not found"))
+    }
+
+    /// Get current job counter (number of jobs created)
+    pub fn get_job_counter(env: Env) -> u32 {
+        env.storage().instance().get(&Symbol::new(&env, "job_counter")).unwrap_or(0)
     }
 
     /// Get all jobs for a client
@@ -199,6 +211,9 @@ impl EscrowCore {
     pub fn approve_milestone(env: Env, job_id: BytesN<32>, milestone_id: u32) {
         let mut job = Self::get_job(env.clone(), job_id.clone());
         
+        // Require client authorization
+        job.client.require_auth();
+        
         // Find and update milestone
         let mut milestone_found = false;
         for i in 0..job.milestones.len() {
@@ -227,6 +242,9 @@ impl EscrowCore {
     ) {
         let mut job = Self::get_job(env.clone(), job_id.clone());
         
+        // Require client authorization
+        job.client.require_auth();
+        
         // Find milestone
         let mut milestone_amount = 0i128;
         let mut milestone_found = false;
@@ -249,20 +267,17 @@ impl EscrowCore {
             panic!("milestone not found");
         }
 
-        // Withdraw from YieldHarvester (principal + yield)
+        // Withdraw from YieldHarvester and send directly to freelancer
         let yield_harvester = Self::get_yield_harvester(&env);
         let mut args = Vec::new(&env);
-        args.push_back(job.client.clone().into_val(&env));
+        args.push_back(env.current_contract_address().into_val(&env));
         args.push_back(milestone_amount.into_val(&env));
-        let total_withdraw = env.invoke_contract::<i128>(
+        args.push_back(job.freelancer.clone().into_val(&env));  // Pass freelancer address
+        let payment_amount = env.invoke_contract::<i128>(
             &yield_harvester,
-            &Symbol::new(&env, "withdraw"),
+            &Symbol::new(&env, "withdraw_to"),
             args,
         );
-
-        // Transfer payment to freelancer
-        let token_client = token::TokenClient::new(&env, &job.asset_address);
-        token_client.transfer(&env.current_contract_address(), &job.freelancer, &milestone_amount);
 
         // Update principal tracking
         let principal_key = Symbol::new(&env, "principal_key");
@@ -305,6 +320,9 @@ impl EscrowCore {
     /// Cancel job and refund client
     pub fn cancel_job(env: Env, job_id: BytesN<32>) {
         let mut job = Self::get_job(env.clone(), job_id.clone());
+        
+        // Require client authorization
+        job.client.require_auth();
         
         if job.status != JobStatus::Active {
             panic!("job not active");

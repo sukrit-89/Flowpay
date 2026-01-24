@@ -35,7 +35,7 @@ export default function Sidebar({ userType }: SidebarProps) {
     const menuItems = userType === 'client' ? clientMenuItems : freelancerMenuItems;
 
     return (
-        <div className="w-full h-screen bg-white border-r border-slate-200 flex flex-col overflow-y-auto shadow-sm">
+        <div className="w-64 md:w-64 lg:w-72 xl:w-80 shrink-0 h-screen bg-white border-r border-slate-200 flex flex-col overflow-y-auto shadow-sm sticky top-0">
             {/* Logo */}
             <div className="p-6 border-b border-slate-200">
                 <div className="flex items-center gap-3">

@@ -17,29 +17,37 @@ LIQUIDITY_ROUTER_SRC="contracts/liquidity_router"
 YIELD_HARVESTER_SRC="contracts/yield_harvester"
 
 # Get deployer address
-DEPLOYER=$(soroban keys address deployer)
+DEPLOYER=$(stellar keys address deployer)
 echo "📍 Deployer Address: $DEPLOYER"
 
-# Check balance
-echo "💰 Checking balance..."
-soroban account balance --id $DEPLOYER --network $NETWORK
+# Build contracts first
+echo "🔨 Building contracts..."
+cd contracts/escrow_core && cargo build --target wasm32-unknown-unknown --release && cd ../..
+cd contracts/liquidity_router && cargo build --target wasm32-unknown-unknown --release && cd ../..
+cd contracts/yield_harvester && cargo build --target wasm32-unknown-unknown --release && cd ../..
 
 # Deploy EscrowCore
 echo "📦 Deploying EscrowCore..."
-ESCROW_CORE_WASM=$(soroban contract build --wasm $ESCROW_CORE_SRC)
-ESCROW_CORE_ID=$(soroban contract deploy --wasm $ESCROW_CORE_WASM --source deployer --network $NETWORK)
+ESCROW_CORE_ID=$(stellar contract deploy \
+  --wasm contracts/escrow_core/target/wasm32-unknown-unknown/release/escrow_core.wasm \
+  --source deployer \
+  --network $NETWORK)
 echo "✅ EscrowCore deployed: $ESCROW_CORE_ID"
 
 # Deploy LiquidityRouter
 echo "📦 Deploying LiquidityRouter..."
-LIQUIDITY_ROUTER_WASM=$(soroban contract build --wasm $LIQUIDITY_ROUTER_SRC)
-LIQUIDITY_ROUTER_ID=$(soroban contract deploy --wasm $LIQUIDITY_ROUTER_WASM --source deployer --network $NETWORK)
+LIQUIDITY_ROUTER_ID=$(stellar contract deploy \
+  --wasm contracts/liquidity_router/target/wasm32-unknown-unknown/release/liquidity_router.wasm \
+  --source deployer \
+  --network $NETWORK)
 echo "✅ LiquidityRouter deployed: $LIQUIDITY_ROUTER_ID"
 
 # Deploy YieldHarvester
 echo "📦 Deploying YieldHarvester..."
-YIELD_HARVESTER_WASM=$(soroban contract build --wasm $YIELD_HARVESTER_SRC)
-YIELD_HARVESTER_ID=$(soroban contract deploy --wasm $YIELD_HARVESTER_WASM --source deployer --network $NETWORK)
+YIELD_HARVESTER_ID=$(stellar contract deploy \
+  --wasm contracts/yield_harvester/target/wasm32-unknown-unknown/release/yield_harvester.wasm \
+  --source deployer \
+  --network $NETWORK)
 echo "✅ YieldHarvester deployed: $YIELD_HARVESTER_ID"
 
 # Save contract addresses

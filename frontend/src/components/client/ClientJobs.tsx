@@ -37,7 +37,29 @@ export default function ClientJobs() {
                     job.clientAddress?.toLowerCase() === address?.toLowerCase()
                 );
                 
-                setJobs(clientJobs);
+                // Update job status based on milestone completion
+                const updatedJobs = clientJobs.map(job => {
+                    // If job has milestones array, check if all are paid
+                    if (Array.isArray(job.milestones)) {
+                        const allPaid = job.milestones.every((m: any) => m.status === 'paid');
+                        if (allPaid && job.status !== 'completed') {
+                            return { ...job, status: 'completed' as const };
+                        }
+                    }
+                    // For legacy jobs with just milestone count, check if status should be completed
+                    return job;
+                });
+                
+                // Save updated statuses back to localStorage if any changed
+                if (updatedJobs.some((job, idx) => job.status !== clientJobs[idx].status)) {
+                    const allJobs = parsedJobs.map(job => {
+                        const updated = updatedJobs.find(u => u.id === job.id);
+                        return updated || job;
+                    });
+                    localStorage.setItem('yieldra_jobs', JSON.stringify(allJobs));
+                }
+                
+                setJobs(updatedJobs);
             } catch (error) {
                 console.error('Failed to fetch jobs:', error);
             } finally {
@@ -76,6 +98,30 @@ export default function ClientJobs() {
             case 'in_progress': return 'In Progress';
             case 'completed': return 'Completed';
             default: return 'Unknown';
+        }
+    };
+
+    const handleDeleteJob = (jobId: string) => {
+        if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+            try {
+                // Get all jobs from localStorage
+                const storedJobs = localStorage.getItem('yieldra_jobs');
+                const allJobs: Job[] = storedJobs ? JSON.parse(storedJobs) : [];
+                
+                // Filter out the job to delete
+                const updatedJobs = allJobs.filter(job => job.id !== jobId);
+                
+                // Save back to localStorage
+                localStorage.setItem('yieldra_jobs', JSON.stringify(updatedJobs));
+                
+                // Update local state
+                setJobs(jobs.filter(job => job.id !== jobId));
+                
+                console.log('✅ Job deleted successfully');
+            } catch (error) {
+                console.error('Failed to delete job:', error);
+                alert('Failed to delete job. Please try again.');
+            }
         }
     };
 
@@ -153,45 +199,60 @@ export default function ClientJobs() {
                         </motion.div>
                     ) : (
                         <div className="space-y-6">
-                            {jobs.map((job, index) => (
-                                <motion.div
-                                    key={job.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="bg-[#1A1F2E] border border-[#2A3441] rounded-xl p-6 hover:border-teal-500/50 transition-colors"
-                                >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-white mb-2">{job.title}</h3>
-                                            <p className="text-[#94A3B8] mb-4">{job.description}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-2xl font-bold text-teal-400">${job.totalAmount}</div>
-                                            <div className="text-sm text-[#94A3B8]">{job.milestones} milestones</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center space-x-4">
-                                            <div className={`px-3 py-1 rounded-full text-sm border ${getStatusColor(job.status)}`}>
-                                                {getStatusText(job.status)}
+                            {jobs.map((job, index) => {
+                                console.log('Job status:', job.id, job.status); // Debug log
+                                return (
+                                    <motion.div
+                                        key={job.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.1 }}
+                                        className="bg-[#1A1F2E] border border-[#2A3441] rounded-xl p-6 hover:border-teal-500/50 transition-colors"
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white mb-2">{job.title}</h3>
+                                                <p className="text-[#94A3B8] mb-4">{job.description}</p>
                                             </div>
-                                            <div className="text-sm text-[#94A3B8]">
-                                                Created: {new Date(job.createdAt).toLocaleDateString()}
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold text-teal-400">${job.totalAmount}</div>
+                                                <div className="text-sm text-[#94A3B8]">{typeof job.milestones === 'number' ? job.milestones : job.milestones?.length || 0} milestones</div>
                                             </div>
                                         </div>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => navigate(`/client/jobs/${job.id}`)}
-                                            className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors"
-                                        >
-                                            View Details
-                                        </motion.button>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                        
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center space-x-4">
+                                                <div className={`px-3 py-1 rounded-full text-sm border ${getStatusColor(job.status)}`}>
+                                                    {getStatusText(job.status)}
+                                                </div>
+                                                <div className="text-sm text-[#94A3B8]">
+                                                    Created: {new Date(job.createdAt).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => navigate(`/client/jobs/${job.id}`)}
+                                                    className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-colors"
+                                                >
+                                                    View Details
+                                                </motion.button>
+                                                {job.status === 'completed' && (
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.05 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                        onClick={() => handleDeleteJob(job.id)}
+                                                        className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-lg font-medium transition-colors"
+                                                    >
+                                                        Delete
+                                                    </motion.button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
