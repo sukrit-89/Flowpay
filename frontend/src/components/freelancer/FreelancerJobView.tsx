@@ -343,13 +343,17 @@ export default function FreelancerJobView() {
 
     if (loadingJob) {
         return (
-            <div className="flex min-h-screen bg-[#090C10]">
+            <div className="flex min-h-screen bg-slate-50">
                 <Sidebar userType="freelancer" />
-                <div className="flex-1 ml-64 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-500 mx-auto mb-4"></div>
-                        <p className="text-[#94A3B8]">Loading job details...</p>
-                    </div>
+                <div className="flex-1 flex items-center justify-center">
+                    <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-center"
+                    >
+                        <div className="inline-block w-12 h-12 border-3 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                        <p className="text-slate-600 font-medium">Loading job details...</p>
+                    </motion.div>
                 </div>
             </div>
         );
@@ -357,22 +361,22 @@ export default function FreelancerJobView() {
 
     if (!job) {
         return (
-            <div className="flex min-h-screen bg-[#090C10]">
+            <div className="flex min-h-screen bg-slate-50">
                 <Sidebar userType="freelancer" />
-                <div className="flex-1 ml-64 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center p-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center"
+                        className="text-center max-w-md"
                     >
-                        <div className="text-6xl mb-4">❌</div>
-                        <h2 className="text-2xl font-bold text-white mb-4">Job Not Found</h2>
-                        <p className="text-[#94A3B8] mb-8">The job you're looking for doesn't exist.</p>
+                        <div className="text-6xl mb-6">📋</div>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-3">Job Not Found</h2>
+                        <p className="text-slate-600 mb-8">The job you're looking for doesn't exist.</p>
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
+                            whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => navigate('/freelancer')}
-                            className="px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold"
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
                         >
                             ← Back to Dashboard
                         </motion.button>
@@ -383,200 +387,245 @@ export default function FreelancerJobView() {
     }
 
     return (
-        <div className="flex min-h-screen bg-[#090C10]">
+        <div className="flex min-h-screen bg-slate-50">
             <Sidebar userType="freelancer" />
 
-            <div className="flex-1 ml-64 p-8">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
-                    <button
-                        onClick={() => navigate('/freelancer')}
-                        className="text-[#94A3B8] hover:text-teal-400 mb-4 flex items-center gap-2 transition-colors"
-                    >
-                        <span>←</span> Back to Dashboard
-                    </button>
-                    <h1 className="text-4xl font-bold text-white mb-2">{job.title}</h1>
-                    <p className="text-[#94A3B8]">{job.description}</p>
-                </motion.div>
-
-                {/* Job Info */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-xl p-6 border border-white/10 mb-8"
-                >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <p className="text-[#94A3B8] text-sm mb-1">Total Amount</p>
-                            <p className="text-2xl font-bold text-white">
-                                ${job.totalAmount.toLocaleString()} <span className="text-lg text-[#94A3B8]">{job.assetType || 'USDC'}</span>
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-[#94A3B8] text-sm mb-1">Client</p>
-                            <p className="text-white font-mono text-sm">
-                                {job.clientAddress.slice(0, 8)}...{job.clientAddress.slice(-8)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-[#94A3B8] text-sm mb-1">Status</p>
-                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(job.status)}`}>
-                                {job.status.replace('_', ' ').toUpperCase()}
-                            </span>
-                        </div>
+            <div className="flex-1 flex flex-col">
+                {/* Header Section */}
+                <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+                    <div className="max-w-6xl mx-auto px-8 py-6">
+                        <motion.button
+                            whileHover={{ x: -4 }}
+                            onClick={() => navigate('/freelancer')}
+                            className="text-indigo-600 hover:text-indigo-700 mb-4 flex items-center gap-2 font-medium transition-colors"
+                        >
+                            ← Back to Dashboard
+                        </motion.button>
+                        <h1 className="text-4xl font-bold text-slate-900 mb-2">{job.title}</h1>
+                        <p className="text-slate-600 text-lg">{job.description}</p>
                     </div>
+                </div>
 
-                    {!isFreelancer && connected && (
-                        <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/30 rounded-lg">
-                            <p className="text-yellow-400 text-sm">
-                                ⚠️ You are not the assigned freelancer for this job.
-                            </p>
+                {/* Job Info Card */}
+                <div className="max-w-6xl mx-auto px-8 py-8 w-full">
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-indigo-50 to-slate-50 rounded-2xl p-8 border border-slate-200 mb-8"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div>
+                                <p className="text-sm text-slate-600 font-semibold mb-2">Total Contract Value</p>
+                                <p className="text-3xl font-bold text-indigo-600">
+                                    ${job.totalAmount.toLocaleString()} <span className="text-sm text-slate-500 font-normal">{job.assetType || 'USDC'}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600 font-semibold mb-2">Hiring Client</p>
+                                <p className="text-slate-900 font-mono text-sm font-semibold">
+                                    {job.clientAddress.slice(0, 8)}...{job.clientAddress.slice(-8)}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-600 font-semibold mb-2">Contract Status</p>
+                                <span className="inline-block px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold">
+                                    {job.status.replace('_', ' ')}
+                                </span>
+                            </div>
                         </div>
-                    )}
-                </motion.div>
 
-                {/* Milestones */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <h2 className="text-2xl font-bold text-white mb-6">Milestones</h2>
+                        {!isFreelancer && connected && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                            >
+                                <p className="text-amber-800 text-sm font-medium">
+                                    ⚠️ You are not the assigned freelancer for this contract.
+                                </p>
+                            </motion.div>
+                        )}
+                    </motion.div>
+
+                    {/* Milestones Section */}
+                    <h2 className="text-2xl font-bold text-slate-900 mb-6">Milestone Payments</h2>
                     
                     <div className="space-y-4">
                         {job.milestones && Array.isArray(job.milestones) && job.milestones.map((milestone, index) => (
                             <motion.div
                                 key={milestone.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + index * 0.1 }}
-                                className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-xl p-6 border border-white/10"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.08 }}
+                                whileHover={{ boxShadow: milestone.status !== 'paid' ? '0 10px 25px rgba(0, 0, 0, 0.08)' : undefined }}
+                                className="bg-white rounded-2xl p-6 border border-slate-100 transition-all duration-200 hover:border-slate-200 relative"
                             >
-                                {/* Milestone Header */}
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-500/20 text-teal-400 font-bold">
-                                                {milestone.id}
-                                            </span>
-                                            <h3 className="text-xl font-bold text-white">{milestone.title}</h3>
-                                        </div>
-                                        <p className="text-[#94A3B8] ml-11">{milestone.description}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-2xl font-bold text-white">
-                                            ${milestone.amount.toFixed(2)}
-                                        </p>
-                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border mt-2 ${getStatusColor(milestone.status)}`}>
-                                            {getStatusText(milestone.status)}
+                                {/* Status Badge */}
+                                <div className="absolute top-6 right-6">
+                                    {milestone.status === 'pending' && (
+                                        <span className="inline-block px-4 py-2 bg-slate-100 text-slate-700 rounded-full text-sm font-semibold">
+                                            Pending
                                         </span>
-                                    </div>
+                                    )}
+                                    {milestone.status === 'submitted' && (
+                                        <span className="inline-block px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold">
+                                            📤 Submitted
+                                        </span>
+                                    )}
+                                    {milestone.status === 'approved' && (
+                                        <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-semibold">
+                                            ✓ Approved
+                                        </span>
+                                    )}
+                                    {milestone.status === 'paid' && (
+                                        <span className="inline-block px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold">
+                                            ✨ Paid
+                                        </span>
+                                    )}
                                 </div>
 
-                                {/* Proof URL if submitted */}
-                                {milestone.proofUrl && (
-                                    <div className="ml-11 mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                        <p className="text-sm text-[#94A3B8] mb-1">Proof of Work:</p>
-                                        <a
-                                            href={milestone.proofUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:text-blue-300 text-sm break-all underline"
-                                        >
-                                            {milestone.proofUrl}
-                                        </a>
-                                        {milestone.submittedAt && (
-                                            <p className="text-xs text-[#94A3B8] mt-2">
-                                                Submitted: {new Date(milestone.submittedAt).toLocaleString()}
-                                            </p>
-                                        )}
+                                <div className="pr-40">
+                                    {/* Milestone Header */}
+                                    <div className="flex items-start gap-4 mb-4">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 font-bold flex-shrink-0">
+                                            {milestone.id}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-xl font-bold text-slate-900 mb-1">{milestone.title}</h3>
+                                            <p className="text-slate-600">{milestone.description}</p>
+                                        </div>
                                     </div>
-                                )}
 
-                                {/* Submission Form - Only show if user is freelancer and milestone is pending */}
-                                {isFreelancer && milestone.status === 'pending' && (
-                                    <div className="ml-11 mt-4 p-4 bg-teal-500/10 border border-teal-500/30 rounded-lg">
-                                        <label className="block text-sm font-semibold text-white mb-2">
-                                            Submit Proof of Work
-                                        </label>
-                                        <div className="flex gap-3">
-                                            <input
-                                                type="url"
-                                                placeholder="https://github.com/... or https://drive.google.com/..."
-                                                value={proofUrls[milestone.id] || ''}
-                                                onChange={(e) => setProofUrls(prev => ({
-                                                    ...prev,
-                                                    [milestone.id]: e.target.value
-                                                }))}
-                                                disabled={submittingProof === milestone.id}
-                                                className="flex-1 px-4 py-2 bg-[#0F172A] border border-white/10 rounded-lg text-white placeholder-[#94A3B8] focus:outline-none focus:border-teal-500 disabled:opacity-50"
-                                            />
+                                    {/* Amount */}
+                                    <div className="mb-6 pt-4 border-t border-slate-100">
+                                        <p className="text-sm text-slate-500 font-semibold mb-1">Milestone Amount</p>
+                                        <p className="text-2xl font-bold text-indigo-600">${milestone.amount.toFixed(2)}</p>
+                                    </div>
+
+                                    {/* Proof of Work Display */}
+                                    {milestone.proofUrl && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl"
+                                        >
+                                            <p className="text-sm text-blue-900 font-semibold mb-2">📄 Proof of Work Submitted</p>
+                                            <a
+                                                href={milestone.proofUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-indigo-600 hover:text-indigo-700 font-medium break-all underline transition-colors"
+                                            >
+                                                {milestone.proofUrl}
+                                            </a>
+                                            {milestone.submittedAt && (
+                                                <p className="text-xs text-slate-600 mt-3">
+                                                    Submitted {new Date(milestone.submittedAt).toLocaleDateString()} at {new Date(milestone.submittedAt).toLocaleTimeString()}
+                                                </p>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {/* Proof Submission Form */}
+                                    {isFreelancer && milestone.status === 'pending' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="space-y-4 p-6 bg-indigo-50 border border-indigo-200 rounded-xl"
+                                        >
+                                            <div>
+                                                <label className="block text-sm font-bold text-slate-900 mb-3">
+                                                    📤 Send Proof of Work
+                                                </label>
+                                                <p className="text-xs text-slate-600 mb-4">Share a link to your completed work (GitHub, Google Drive, portfolio, etc.)</p>
+                                                <input
+                                                    type="url"
+                                                    placeholder="https://github.com/... or https://drive.google.com/..."
+                                                    value={proofUrls[milestone.id] || ''}
+                                                    onChange={(e) => setProofUrls(prev => ({
+                                                        ...prev,
+                                                        [milestone.id]: e.target.value
+                                                    }))}
+                                                    disabled={submittingProof === milestone.id}
+                                                    className="w-full px-4 py-3 bg-white border-2 border-indigo-200 rounded-xl text-slate-900 placeholder-slate-500 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 disabled:opacity-50 transition-all duration-200"
+                                                />
+                                            </div>
                                             <motion.button
-                                                whileHover={submittingProof === milestone.id ? {} : { scale: 1.05 }}
+                                                whileHover={submittingProof === milestone.id ? {} : { scale: 1.02 }}
                                                 whileTap={submittingProof === milestone.id ? {} : { scale: 0.95 }}
                                                 onClick={() => handleSubmitProof(milestone.id)}
                                                 disabled={submittingProof === milestone.id}
-                                                className="px-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-full font-semibold transition-all duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                             >
                                                 {submittingProof === milestone.id ? (
                                                     <>
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                        <motion.div
+                                                            animate={{ rotate: 360 }}
+                                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                                                        />
                                                         Submitting...
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        <span>📤</span> Submit Proof
-                                                    </>
+                                                    <>Send Proof</>
                                                 )}
                                             </motion.button>
-                                        </div>
-                                        <p className="text-xs text-[#94A3B8] mt-2">
-                                            💡 Provide a link to your completed work (GitHub repo, Google Drive, etc.)
-                                        </p>
-                                    </div>
-                                )}
+                                        </motion.div>
+                                    )}
 
-                                {/* Show waiting message for submitted milestones */}
-                                {isFreelancer && milestone.status === 'submitted' && (
-                                    <div className="ml-11 mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                                        <p className="text-blue-400 text-sm">
-                                            ⏳ Waiting for client approval...
-                                        </p>
-                                    </div>
-                                )}
+                                    {/* Status Messages */}
+                                    {isFreelancer && milestone.status === 'submitted' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-4 bg-blue-50 border border-blue-200 rounded-xl"
+                                        >
+                                            <p className="text-blue-700 text-sm font-medium">
+                                                🔍 Your proof is under review. The client will approve or request changes soon.
+                                            </p>
+                                        </motion.div>
+                                    )}
 
-                                {/* Show approved message */}
-                                {milestone.status === 'approved' && (
-                                    <div className="ml-11 mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-                                        <p className="text-green-400 text-sm">
-                                            ✅ Approved! Waiting for payment release...
-                                        </p>
-                                    </div>
-                                )}
+                                    {milestone.status === 'approved' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                                        >
+                                            <p className="text-amber-700 text-sm font-medium">
+                                                ✓ Approved! Waiting for the client to release payment...
+                                            </p>
+                                        </motion.div>
+                                    )}
 
-                                {/* Show paid message */}
-                                {milestone.status === 'paid' && (
-                                    <div className="ml-11 mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                                        <p className="text-emerald-400 text-sm">
-                                            💰 Payment received!
-                                        </p>
-                                    </div>
-                                )}
+                                    {milestone.status === 'paid' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl"
+                                        >
+                                            <p className="text-emerald-700 text-sm font-bold flex items-center gap-2">
+                                                ✨ Payment received! Congratulations on completing this milestone.
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                </div>
                             </motion.div>
                         ))}
                         
                         {(!job.milestones || !Array.isArray(job.milestones) || job.milestones.length === 0) && (
-                            <div className="p-8 bg-gradient-to-br from-[#0F172A] to-[#1E293B] rounded-xl border border-white/10 text-center">
-                                <p className="text-[#94A3B8]">No milestones found for this job.</p>
-                            </div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="p-12 bg-slate-50 rounded-2xl border border-slate-200 text-center"
+                            >
+                                <div className="text-5xl mb-4">📋</div>
+                                <p className="text-slate-600 font-medium">No milestones found for this contract.</p>
+                            </motion.div>
                         )}
                     </div>
-                </motion.div>
+                </div>
             </div>
 
             {/* Toast Notification */}

@@ -93,43 +93,43 @@ export default function FreelancerDashboard() {
     ];
 
     return (
-        <div className="flex min-h-screen bg-[#090C10]">
+        <div className="flex min-h-screen bg-slate-50">
             {/* Sidebar */}
             <Sidebar userType="freelancer" />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col ml-64">                {/* Navigation */}
+            <div className="flex-1 flex flex-col">                {/* Navigation */}
                 <motion.nav
-                    initial={{ y: -100 }}
-                    animate={{ y: 0 }}
-                    className="border-b border-teal-500/10 backdrop-blur-xl bg-[#0F172A]/80 sticky top-0 z-50"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="border-b border-slate-200 bg-white sticky top-0 z-50 shadow-sm"
                 >
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                    <div className="max-w-7xl mx-auto px-8 py-4 flex justify-between items-center">
                         {/* Page Title */}
-                        <h1 className="text-2xl font-bold text-white capitalize">{activeTab} Jobs</h1>
+                        <h1 className="text-2xl font-bold text-slate-900 capitalize">{activeTab} Jobs</h1>
 
                         {/* Wallet */}
                         <div className="flex items-center gap-3">
                             {connected ? (
                                 <>
-                                    <div className="hidden sm:block px-4 py-2 bg-white/5 rounded-lg font-mono text-sm text-gray-400">
+                                    <div className="hidden sm:block px-4 py-2 bg-slate-100 rounded-full font-mono text-sm text-slate-700">
                                         {address.slice(0, 6)}...{address.slice(-4)}
                                     </div>
                                     <motion.button
-                                        whileHover={{ scale: 1.05 }}
+                                        whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={disconnect}
-                                        className="px-4 py-2 border border-red-500/50 bg-red-500/10 text-red-400 rounded-lg"
+                                        className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-full font-semibold transition-all duration-200"
                                     >
                                         Disconnect
                                     </motion.button>
                                 </>
                             ) : (
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
+                                    whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={connect}
-                                    className="px-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/40"
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold shadow-sm hover:shadow-md transition-all duration-200"
                                 >
                                     Connect Wallet
                                 </motion.button>
@@ -138,8 +138,8 @@ export default function FreelancerDashboard() {
                     </div>
 
                     {error && (
-                        <div className="bg-yellow-500/10 border-t border-yellow-500/20 px-6 py-2">
-                            <p className="text-sm text-yellow-400 text-center">{error}</p>
+                        <div className="bg-amber-50 border-t border-amber-200 px-6 py-2">
+                            <p className="text-sm text-amber-700 text-center font-medium">{error}</p>
                         </div>
                     )}
                 </motion.nav>
@@ -155,24 +155,25 @@ export default function FreelancerDashboard() {
                             className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
                         >
                             {[
-                                { label: 'Total Earned', value: stats.totalEarned, prefix: '$', color: 'green' },
+                                { label: 'Total Earned', value: stats.totalEarned, prefix: '$', color: 'emerald' },
                                 { label: 'Active Jobs', value: stats.activeJobs, prefix: '', color: 'blue' },
-                                { label: 'Completed', value: stats.completedJobs, prefix: '', color: 'purple' },
-                                { label: 'Rating', value: stats.avgRating, prefix: '', suffix: '⭐', color: 'yellow' }
+                                { label: 'Completed', value: stats.completedJobs, prefix: '', color: 'indigo' },
+                                { label: 'Rating', value: stats.avgRating, prefix: '', suffix: '⭐', color: 'amber' }
                             ].map((stat, i) => (
                                 <motion.div
                                     key={i}
                                     variants={fadeInUp}
-                                    whileHover={hoverLift.hover}
-                                    className="p-6 bg-[#0F172A] backdrop-blur-xl border border-teal-500/10 rounded-2xl"
+                                    whileHover={{ scale: 1.02, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)' }}
+                                    transition={{ duration: 0.2 }}
+                                    className="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm"
                                 >
-                                    <div className="text-sm text-gray-400 mb-2">{stat.label}</div>
+                                    <div className="text-sm text-slate-600 font-semibold mb-2">{stat.label}</div>
                                     <AnimatedCounter
                                         value={stat.value}
                                         prefix={stat.prefix}
                                         suffix={stat.suffix}
                                         decimals={stat.suffix?.includes('⭐') ? 1 : 0}
-                                        className={`text-3xl font-bold text-${stat.color}-400`}
+                                        className={`text-3xl font-bold text-${stat.color}-600`}
                                     />
                                 </motion.div>
                             ))}
@@ -181,10 +182,10 @@ export default function FreelancerDashboard() {
                         {/* Available Jobs */}
                         {activeTab === 'available' && (
                             <FadeInUp>
-                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
                                     {/* Header */}
                                     <div className="mb-6">
-                                        <h2 className="text-3xl font-bold mb-4">Browse Jobs</h2>
+                                        <h2 className="text-3xl font-bold text-slate-900 mb-4">Browse Jobs</h2>
 
                                         {/* Categories */}
                                         <div className="flex gap-2 overflow-x-auto pb-2">
@@ -192,9 +193,9 @@ export default function FreelancerDashboard() {
                                                 <button
                                                     key={cat}
                                                     onClick={() => setSelectedCategory(cat)}
-                                                    className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                                                        ? 'bg-teal-500 text-white'
-                                                        : 'bg-white/5 border border-teal-500/20 text-[#94A3B8] hover:border-teal-500'
+                                                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all duration-200 ${selectedCategory === cat
+                                                        ? 'bg-indigo-600 text-white shadow-sm'
+                                                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                                                         }`}
                                                 >
                                                     {cat}
@@ -208,32 +209,32 @@ export default function FreelancerDashboard() {
                                         {availableJobs.map((job, i) => (
                                             <motion.div
                                                 key={job.id}
-                                                initial={{ opacity: 0, y: 20 }}
+                                                initial={{ opacity: 0, y: 16 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.1 }}
-                                                whileHover={{ scale: 1.01, x: 4 }}
-                                                className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                                                transition={{ delay: i * 0.08 }}
+                                                whileHover={{ scale: 1.01, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)' }}
+                                                className="p-6 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white transition-all duration-200 cursor-pointer"
                                                 onClick={() => navigate(`/freelancer/job/${job.id}`)}
                                             >
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3 mb-2">
-                                                            <h3 className="text-xl font-bold">{job.title}</h3>
+                                                            <h3 className="text-xl font-bold text-slate-900">{job.title}</h3>
                                                             {job.verified && (
-                                                                <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                                 </svg>
                                                             )}
                                                         </div>
-                                                        <p className="text-gray-400 mb-3">{job.description}</p>
+                                                        <p className="text-slate-600 mb-3">{job.description}</p>
                                                         <div className="flex flex-wrap gap-2 mb-3">
                                                             {job.skills.map(skill => (
-                                                                <span key={skill} className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
+                                                                <span key={skill} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold">
                                                                     {skill}
                                                                 </span>
                                                             ))}
                                                         </div>
-                                                        <div className="flex gap-4 text-sm text-gray-500">
+                                                        <div className="flex gap-4 text-sm text-slate-600">
                                                             <span>⏱ {job.duration}</span>
                                                             <span>💼 {job.proposals} proposals</span>
                                                             <span>📅 {job.posted}</span>
@@ -241,20 +242,20 @@ export default function FreelancerDashboard() {
                                                         </div>
                                                     </div>
                                                     <div className="text-right ml-6">
-                                                        <div className="text-3xl font-bold text-green-400">${job.budget}</div>
-                                                        <span className="inline-block mt-2 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                                                        <div className="text-3xl font-bold text-emerald-600">${job.budget}</div>
+                                                        <span className="inline-block mt-2 px-4 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-semibold">
                                                             {job.category}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
+                                                    whileTap={{ scale: 0.95 }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         navigate(`/freelancer/job/${job.id}`);
                                                     }}
-                                                    className="w-full py-3 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-teal-500/50 transition-all"
+                                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold shadow-sm hover:shadow-md transition-all duration-200"
                                                 >
                                                     View Job Details →
                                                 </motion.button>
@@ -268,25 +269,26 @@ export default function FreelancerDashboard() {
                         {/* My Proposals */}
                         {activeTab === 'proposals' && (
                             <FadeInUp>
-                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-                                    <h2 className="text-2xl font-bold mb-6">My Proposals</h2>
+                                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-6">My Proposals</h2>
                                     <div className="space-y-4">
                                         {myProposals.map(proposal => (
                                             <motion.div
                                                 key={proposal.id}
-                                                whileHover={{ scale: 1.01 }}
-                                                className="p-6 bg-white/5 border border-white/10 rounded-xl"
+                                                whileHover={{ scale: 1.01, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)' }}
+                                                transition={{ duration: 0.2 }}
+                                                className="p-6 bg-slate-50 border border-slate-200 rounded-xl"
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <h3 className="text-lg font-semibold mb-1">{proposal.job}</h3>
-                                                        <p className="text-sm text-gray-400">Submitted {proposal.submitted}</p>
+                                                        <h3 className="text-lg font-semibold text-slate-900 mb-1">{proposal.job}</h3>
+                                                        <p className="text-sm text-slate-600">Submitted {proposal.submitted}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-2xl font-bold text-green-400">${proposal.amount}</div>
-                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm ${proposal.status === 'accepted'
-                                                            ? 'bg-green-500/20 text-green-400'
-                                                            : 'bg-yellow-500/20 text-yellow-400'
+                                                        <div className="text-2xl font-bold text-emerald-600">${proposal.amount}</div>
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${proposal.status === 'accepted'
+                                                            ? 'bg-emerald-50 text-emerald-700'
+                                                            : 'bg-amber-50 text-amber-700'
                                                             }`}>
                                                             {proposal.status}
                                                         </span>
@@ -302,8 +304,8 @@ export default function FreelancerDashboard() {
                         {/* Active Contracts */}
                         {activeTab === 'active' && (
                             <FadeInUp>
-                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-                                    <h2 className="text-2xl font-bold mb-6">Active Contracts</h2>
+                                <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-6">Active Contracts</h2>
                                     <div className="space-y-4">
                                         {activeContracts.map((contract, i) => (
                                             <motion.div
@@ -311,36 +313,37 @@ export default function FreelancerDashboard() {
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 transition={{ delay: i * 0.1 }}
-                                                whileHover={{ scale: 1.01 }}
-                                                className="p-6 bg-white/5 border border-white/10 rounded-xl"
+                                                whileHover={{ scale: 1.01, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.08)' }}
+                                                className="p-6 bg-slate-50 border border-slate-200 rounded-xl"
                                             >
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div>
-                                                        <h3 className="text-lg font-semibold mb-1">{contract.title}</h3>
-                                                        <p className="text-sm text-gray-400 font-mono">Client: {contract.client}</p>
+                                                        <h3 className="text-lg font-semibold text-slate-900 mb-1">{contract.title}</h3>
+                                                        <p className="text-sm text-slate-600 font-mono">Client: {contract.client}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-green-400 font-bold">${contract.earned}</div>
-                                                        <div className="text-sm text-gray-400">of ${contract.total}</div>
+                                                        <div className="text-emerald-600 font-bold">${contract.earned}</div>
+                                                        <div className="text-sm text-slate-600">of ${contract.total}</div>
                                                     </div>
                                                 </div>
                                                 <div className="mb-4">
-                                                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                                                    <div className="flex justify-between text-sm text-slate-600 mb-2">
                                                         <span>Progress</span>
                                                         <span>{contract.progress}%</span>
                                                     </div>
-                                                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                                                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                                                         <motion.div
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${contract.progress}%` }}
-                                                            className="h-full bg-gradient-to-r from-green-500 to-blue-500"
+                                                            className="h-full bg-gradient-to-r from-emerald-500 to-indigo-600"
                                                         />
                                                     </div>
                                                 </div>
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.95 }}
                                                     onClick={() => navigate(`/freelancer/job/${contract.id}`)}
-                                                    className="w-full py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30"
+                                                    className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full font-semibold transition-all duration-200"
                                                 >
                                                     Submit Milestone Proof
                                                 </motion.button>

@@ -1,50 +1,337 @@
+@import url('https://rsms.me/inter/inter.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   DESIGN SYSTEM: Premium, Timeless UI Foundation
+   ============================================================================ */
+
 :root {
-  /* Yieldra - Dark Teal Accent Theme */
+  /* Surfaces & Backgrounds */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f9fafb;
+  --surface-tertiary: #f3f4f6;
+  --surface-inverse: #111827;
+  --surface-inverse-secondary: #1f2937;
 
-  /* Backgrounds */
-  --bg-primary: #090C10;
-  --bg-card: #0F172A;
+  /* Content & Text */
+  --content-primary: #111827;
+  --content-secondary: #374151;
+  --content-tertiary: #6b7280;
+  --content-tertiary-hover: #4b5563;
+  --content-disabled: #d1d5db;
 
-  /* Accent Colors */
-  --accent-primary: #14B8A6;
-  --accent-glow: #5EEAD4;
+  /* Borders */
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --border-subtle: #f3f4f6;
 
-  /* Text */
-  --text-primary: #E2E8F0;
-  --text-muted: #94A3B8;
+  /* Accent Color: Muted Emerald (primary action, success states) */
+  --accent-primary: #15803d;
+  --accent-primary-hover: #166534;
+  --accent-primary-active: #052e16;
+  --accent-light: #dcfce7;
+  --accent-lighter: #f0fdf4;
 
-  /* Status Colors */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
+  /* Supporting Colors */
+  --status-success: #15803d;
+  --status-success-light: #dcfce7;
+  --status-warning: #d97706;
+  --status-warning-light: #fef3c7;
+  --status-error: #dc2626;
+  --status-error-light: #fee2e2;
+  --status-info: #0891b2;
+  --status-info-light: #ecf0f1;
+
+  /* Shadows: Subtle, refined */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-elevated: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom Animations */
-@keyframes gradient-flow {
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  0%,
-  100% {
-    background-position: 0% 50%;
+body {
+  background: var(--surface-primary);
+  color: var(--content-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+/* Typography: Hierarchy & Refinement */
+@layer base {
+  h1 {
+    @apply text-5xl font-bold tracking-tight text-slate-900;
+    letter-spacing: -0.02em;
   }
 
-  50% {
-    background-position: 100% 50%;
+  h2 {
+    @apply text-4xl font-bold tracking-tight text-slate-900;
+    letter-spacing: -0.015em;
+  }
+
+  h3 {
+    @apply text-3xl font-bold text-slate-900;
+    letter-spacing: -0.01em;
+  }
+
+  h4 {
+    @apply text-2xl font-semibold text-slate-900;
+  }
+
+  h5 {
+    @apply text-xl font-semibold text-slate-900;
+  }
+
+  h6 {
+    @apply text-lg font-semibold text-slate-900;
+  }
+
+  p {
+    @apply text-base text-slate-600 leading-relaxed;
+  }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  button {
+    @apply transition-all duration-200;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply transition-colors duration-200;
   }
 }
 
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0px);
+/* Component Base Styles */
+@layer components {
+  /* Cards: Refined, minimal border */
+  .card {
+    @apply bg-white border border-slate-200 rounded-lg shadow-sm;
   }
 
-  50% {
-    transform: translateY(-20px);
+  .card-interactive {
+    @apply card hover:border-slate-300 hover:shadow-md transition-all duration-200 cursor-pointer;
+  }
+
+  .card-elevated {
+    @apply card shadow-lg border-slate-200;
+  }
+
+  /* Buttons: Clear, purposeful hierarchy */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply btn bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300;
+  }
+
+  .btn-tertiary {
+    @apply btn bg-transparent text-slate-600 border border-slate-300 hover:bg-slate-50 hover:border-slate-400;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800;
+  }
+
+  .btn-warning {
+    @apply btn bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700;
+  }
+
+  .btn-success {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs font-medium;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base font-semibold;
+  }
+
+  /* Input Fields: Clean, accessible */
+  .input {
+    @apply w-full px-4 py-2 rounded-md border border-slate-300 bg-white text-slate-900 placeholder-slate-500;
+    @apply focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0 focus:border-transparent;
+    @apply disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed;
+  }
+
+  .input-error {
+    @apply border-rose-500 focus:ring-rose-500;
+  }
+
+  /* Labels */
+  .label {
+    @apply block text-sm font-medium text-slate-900 mb-2;
+  }
+
+  .label-helper {
+    @apply text-xs text-slate-500 mt-1 block;
+  }
+
+  /* Badges: Status indicators */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-secondary {
+    @apply bg-slate-100 text-slate-800;
+  }
+
+  .badge-success {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-warning {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .badge-error {
+    @apply bg-rose-100 text-rose-800;
+  }
+
+  .badge-info {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  /* Section Container */
+  .section {
+    @apply py-12 sm:py-16 md:py-20;
+  }
+
+  .section-xl {
+    @apply py-16 sm:py-24 md:py-32;
+  }
+
+  /* Container */
+  .container-max {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-slate-200;
+  }
+
+  .divider-subtle {
+    @apply border-t border-slate-100;
+  }
+
+  /* Loading Skeleton */
+  .skeleton {
+    @apply animate-pulse bg-slate-200 rounded;
+  }
+
+  /* Focus Visible (accessibility) */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
+  }
+}
+
+/* Animations: Subtle, purposeful */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1200px 0;
+  }
+  100% {
+    background-position: 1200px 0;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 300ms ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 300ms ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 300ms ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 200ms ease-out;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+    background-size: 1200px 100%;
   }
 }
 

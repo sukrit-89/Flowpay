@@ -1,10 +1,8 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
-import AnimatedGradient from './animated/AnimatedGradient';
 import FadeInUp from './animated/FadeInUp';
 import AnimatedCounter from './animated/AnimatedCounter';
-import { fadeInUp, staggerContainer, hoverLift } from '../animations/variants';
 
 export default function Landing() {
     const navigate = useNavigate();
@@ -13,171 +11,165 @@ export default function Landing() {
     const features = [
         {
             icon: '💰',
-            title: '5% APY Yield',
-            description: 'Your escrowed funds automatically earn yield from US Treasury-backed OUSG tokens'
+            title: 'Passive Yield',
+            description: 'Earn 5% APY on escrowed funds backed by US Treasury tokens'
         },
         {
             icon: '🔒',
-            title: 'Smart Escrow',
-            description: 'Milestone-based payments protected by blockchain smart contracts'
+            title: 'Secure Escrow',
+            description: 'Milestone-based payments protected by blockchain contracts'
         },
         {
             icon: '🌍',
-            title: 'Multi-Currency',
-            description: 'Pay in XLM, USDC, or convert to INR, KES, NGN  via Stellar DEX'
+            title: 'Global Payments',
+            description: 'Accept XLM, USDC, or stablecoins in INR, KES, NGN'
         },
         {
             icon: '⚡',
             title: 'Instant Settlement',
-            description: 'Near-zero fees (~$0.01) and instant payment confirmation'
+            description: 'Near-zero fees and immediate transaction confirmation'
         }
     ];
 
     const stats = [
-        { label: 'Total Value Locked', value: 142800000, prefix: '$', suffix: '' },
-        { label: 'Average Yield', value: 5.0, prefix: '', suffix: '% APY' },
-        { label: 'Active Jobs', value: 1247, prefix: '', suffix: '+' },
-        { label: 'Happy Freelancers', value: 5890, prefix: '', suffix: '+' }
+        { label: 'Value Locked', value: 142.8, suffix: 'M', prefix: '$' },
+        { label: 'Average APY', value: 5.0, suffix: '%' },
+        { label: 'Active Projects', value: 1247, suffix: '+' },
+        { label: 'Freelancers', value: 5890, suffix: '+' }
     ];
 
     return (
-        <div className="min-h-screen bg-[#090C10] text-[#E2E8F0] overflow-hidden relative">
-            {/* Animated Background */}
-            <AnimatedGradient />
-
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
             {/* Navigation */}
             <motion.nav
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="relative z-50 border-b border-teal-500/10 backdrop-blur-lg bg-[#0F172A]/80"
+                className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur"
             >
-                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div className="container-max flex items-center justify-between py-4">
                     <div className="flex items-center gap-3">
                         <img
                             src="/yieldra_teal_logo_1769009161049.png"
                             alt="Yieldra"
-                            className="w-10 h-10 object-contain"
+                            className="w-9 h-9 object-contain"
                         />
-                        <span className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">
-                            Yieldra
-                        </span>
+                        <span className="text-xl font-bold text-slate-900">Yieldra</span>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <a href="#features" className="text-[#94A3B8] hover:text-teal-400 transition-colors">Features</a>
-                        <a href="#how-it-works" className="text-[#94A3B8] hover:text-teal-400 transition-colors">How It Works</a>
-                        <a href="https://github.com/sukrit-89" target="_blank" rel="noreferrer" className="text-[#94A3B8] hover:text-teal-400 transition-colors">GitHub</a>
+                    <div className="hidden md:flex items-center gap-8">
+                        <a href="#features" className="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium">
+                            Features
+                        </a>
+                        <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium">
+                            How it works
+                        </a>
+                        <a
+                            href="https://github.com/sukrit-89"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-slate-600 hover:text-slate-900 transition-colors text-sm font-medium"
+                        >
+                            GitHub
+                        </a>
+                    </div>
 
+                    <div className="flex items-center gap-3">
                         {connected ? (
                             <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-500 font-mono">
+                                <span className="text-xs font-mono text-slate-500">
                                     {address.slice(0, 6)}...{address.slice(-4)}
                                 </span>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                <button
                                     onClick={disconnect}
-                                    className="px-4 py-2 border border-red-600/50 bg-red-600/10 text-red-400 rounded-lg hover:bg-red-600/20 transition-colors"
+                                    className="btn btn-secondary btn-sm"
                                 >
                                     Disconnect
-                                </motion.button>
+                                </button>
                             </div>
                         ) : (
-                            <motion.button
-                                whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(20, 184, 166, 0.6)' }}
-                                whileTap={{ scale: 0.95 }}
+                            <button
                                 onClick={connect}
-                                className="px-6 py-2 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-lg shadow-teal-500/40"
+                                className="btn btn-primary btn-sm"
                             >
                                 Connect Wallet
-                            </motion.button>
+                            </button>
                         )}
                     </div>
                 </div>
             </motion.nav>
 
             {/* Hero Section */}
-            <section className="relative z-10 max-w-7xl mx-auto px-6 py-24 sm:py-32">
-                <div className="text-center">
+            <section className="relative py-24 sm:py-32 md:py-40 px-4">
+                <div className="max-w-4xl mx-auto text-center">
                     {/* Badge */}
-                    <FadeInUp delay={0.2}>
+                    <FadeInUp delay={0.1}>
                         <motion.div
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/5 border border-green-500/20 rounded-full text-green-400 mb-8"
-                            animate={{ scale: [1, 1.02, 1] }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-700 text-xs font-semibold mb-6"
+                            animate={{ scale: [1, 1.01, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
                         >
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                            TESTNET LIVE
+                            <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-pulse" />
+                            Testnet Live
                         </motion.div>
                     </FadeInUp>
 
-                    {/* Main Headline */}
-                    <FadeInUp delay={0.3}>
-                        <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold mb-6">
-                            <span className="bg-gradient-to-r from-teal-400 via-teal-500 to-cyan-300 bg-clip-text text-transparent">
-                                Earn 5% APY
-                            </span>
-                            <br />
-                            <span className="text-white">
-                                while paying freelancers
-                            </span>
+                    {/* Headline */}
+                    <FadeInUp delay={0.2}>
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 leading-tight mb-6">
+                            Earn yield while you pay
                         </h1>
                     </FadeInUp>
 
-                    <FadeInUp delay={0.4}>
-                        <p className="text-xl sm:text-2xl text-gray-400 mb-4 max-w-3xl mx-auto">
-                            First yield-generating escrow on Stellar
-                        </p>
-                        <p className="text-lg text-gray-500 mb-12 max-w-2xl mx-auto">
-                            Your escrowed funds earn real yields from US Treasury-backed OUSG tokens. Stop losing money on idle escrow.
+                    {/* Subheading */}
+                    <FadeInUp delay={0.3}>
+                        <p className="text-lg sm:text-xl text-slate-600 leading-relaxed mb-10 mx-auto max-w-2xl">
+                            The only escrow platform that generates passive income on your deposits. Stop losing money on idle funds—earn 5% APY while protecting your payments with blockchain.
                         </p>
                     </FadeInUp>
 
-                    {/* CTAs */}
-                    <FadeInUp delay={0.5}>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                    {/* CTA Buttons */}
+                    <FadeInUp delay={0.4}>
+                        <div className="flex flex-col sm:flex-row gap-4 mb-16 justify-center">
                             <motion.button
-                                whileHover={{ scale: 1.05, boxShadow: '0 20px 50px rgba(20, 184, 166, 0.5)' }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => navigate('/client')}
-                                className="px-8 py-4 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl font-semibold text-lg shadow-lg shadow-teal-500/40 transition-all"
+                                className="btn btn-primary btn-lg"
                             >
-                                🚀 Start Earning Now
+                                Start Earning Now
                             </motion.button>
                             <motion.button
-                                whileHover={{ scale: 1.05, borderColor: 'rgba(20, 184, 166, 0.5)' }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => navigate('/freelancer')}
-                                className="px-8 py-4 border-2 border-teal-500/20 backdrop-blur rounded-xl font-semibold text-lg hover:bg-white/5 hover:border-teal-500/50 transition-all"
+                                className="btn btn-tertiary btn-lg"
                             >
-                                💼 Browse Jobs
+                                Browse Opportunities
                             </motion.button>
                         </div>
                     </FadeInUp>
 
-                    {/* Yield Calculator Visual */}
-                    <FadeInUp delay={0.6}>
+                    {/* Yield Comparison Card */}
+                    <FadeInUp delay={0.5}>
                         <motion.div
-                            className="max-w-2xl mx-auto p-8 bg-[#0F172A] backdrop-blur-xl border border-teal-500/10 rounded-2xl"
-                            whileHover={hoverLift.hover}
-                            initial={hoverLift.rest}
+                            className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-lg mx-auto max-w-2xl"
+                            whileHover={{ scale: 1.01, y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
                         >
-                            <div className="text-sm text-gray-500 mb-4">Example: 3-month project</div>
-                            <div className="grid grid-cols-2 gap-8">
+                            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-6">Example: $10,000 for 3 months</p>
+                            <div className="grid sm:grid-cols-2 gap-8 sm:gap-12">
                                 <div>
-                                    <div className="text-gray-500 text-sm mb-2">Traditional Escrow</div>
-                                    <div className="text-3xl font-bold text-gray-600">$0</div>
-                                    <div className="text-sm text-gray-700">yield earned</div>
+                                    <p className="text-sm text-slate-600 font-medium mb-2">Traditional Escrow</p>
+                                    <p className="text-4xl font-bold text-slate-900">$0</p>
+                                    <p className="text-xs text-slate-500 mt-2">earned in yield</p>
                                 </div>
-                                <div>
-                                    <div className="text-gray-500 text-sm mb-2">Yieldra</div>
-                                    <AnimatedCounter
-                                        value={125}
-                                        prefix="$"
-                                        className="text-3xl font-bold text-teal-400"
-                                    />
-                                    <div className="text-sm text-cyan-400">yield earned (5% APY)</div>
+                                <div className="border-l border-slate-200 sm:border-l pl-8 sm:pl-8">
+                                    <p className="text-sm text-slate-600 font-medium mb-2">With Yieldra (5% APY)</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-4xl font-bold text-emerald-600">$125</p>
+                                        <p className="text-sm text-emerald-600 font-semibold">passive income</p>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">zero extra effort</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -185,100 +177,150 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Statistics Section */}
-            <section className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-                <motion.div
-                    variants={staggerContainer}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-6"
-                >
-                    {stats.map((stat, i) => (
-                        <motion.div
-                            key={i}
-                            variants={fadeInUp}
-                            whileHover={hoverLift.hover}
-                            className="p-6 bg-[#0F172A] backdrop-blur-xl border border-teal-500/10 rounded-xl text-center hover:border-teal-500/30 transition-all"
-                        >
-                            <AnimatedCounter
-                                value={stat.value}
-                                prefix={stat.prefix}
-                                suffix={stat.suffix}
-                                decimals={stat.suffix.includes('%') ? 1 : 0}
-                                className="text-3xl font-bold text-orange-500"
-                            />
-                            <div className="text-sm text-gray-500 mt-2">{stat.label}</div>
-                        </motion.div>
-                    ))}
-                </motion.div>
+            {/* Social Proof / Stats Section */}
+            <section className="bg-white border-t border-slate-200 py-20 sm:py-28">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
+                        {stats.map((stat, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1, duration: 0.4 }}
+                                viewport={{ once: true }}
+                                className="text-center"
+                            >
+                                <div className="text-sm text-slate-500 font-semibold uppercase tracking-wide mb-3">{stat.label}</div>
+                                <div className="flex items-center justify-center gap-1">
+                                    <AnimatedCounter
+                                        value={stat.value}
+                                        prefix={stat.prefix || ''}
+                                        className="text-4xl sm:text-5xl font-bold text-slate-900"
+                                    />
+                                    <span className="text-2xl font-semibold text-slate-600">{stat.suffix}</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
-            {/* Features Section */}
-            <section id="features" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
-                <FadeInUp>
-                    <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-                        <span className="bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">
-                            Why Yieldra?
-                        </span>
-                    </h2>
-                    <p className="text-gray-500 text-center text-lg mb-16 max-w-2xl mx-auto">
-                        The only escrow platform that makes YOU money while protecting your payments
-                    </p>
-                </FadeInUp>
+            {/* Features Grid */}
+            <section id="features" className="py-24 sm:py-32 md:py-40 px-4 bg-slate-50">
+                <div className="max-w-6xl mx-auto">
+                    <div className="mb-16 text-center">
+                        <FadeInUp>
+                            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-4">
+                                Why choose Yieldra?
+                            </h2>
+                            <p className="text-lg sm:text-xl text-slate-600 mx-auto max-w-2xl">
+                                Built for freelancers and clients who deserve better
+                            </p>
+                        </FadeInUp>
+                    </div>
 
-                <motion.div
-                    variants={staggerContainer}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-                >
-                    {features.map((feature, i) => (
-                        <motion.div
-                            key={i}
-                            variants={fadeInUp}
-                            whileHover={{ scale: 1.05, y: -8, borderColor: 'rgba(249, 115, 22, 0.3)' }}
-                            className="p-6 bg-[#0F172A] backdrop-blur-xl border border-teal-500/10 rounded-xl hover:bg-[#1a2332] hover:border-teal-500/30 transition-all cursor-pointer"
-                        >
-                            <div className="text-5xl mb-4">{feature.icon}</div>
-                            <h3 className="text-xl font-bold mb-2 text-white">{feature.title}</h3>
-                            <p className="text-gray-500 text-sm">{feature.description}</p>
-                        </motion.div>
-                    ))}
-                </motion.div>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {features.map((feature, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1, duration: 0.4 }}
+                                viewport={{ once: true }}
+                                whileHover={{ scale: 1.02, y: -6 }}
+                                className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-sm hover:shadow-lg transition-all duration-200"
+                            >
+                                <div className="text-5xl mb-6">{feature.icon}</div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-slate-600 leading-relaxed text-lg">
+                                    {feature.description}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="relative z-10 max-w-4xl mx-auto px-6 py-24">
+            {/* How It Works */}
+            <section id="how-it-works" className="py-24 sm:py-32 md:py-40 px-4 bg-white border-t border-slate-200">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-20">
+                        <FadeInUp>
+                            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900">
+                                Simple workflow
+                            </h2>
+                        </FadeInUp>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-12 sm:gap-16">
+                        {[
+                            { num: '1', title: 'Create a project', desc: 'Clients define milestones and budget' },
+                            { num: '2', title: 'Start earning', desc: 'Your funds automatically earn 5% APY' },
+                            { num: '3', title: 'Pay on completion', desc: 'Release payment once work is approved' }
+                        ].map((step, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 12 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.15, duration: 0.4 }}
+                                viewport={{ once: true }}
+                                className="relative text-center"
+                            >
+                                <div className="flex justify-center mb-6">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 font-bold text-2xl flex items-center justify-center border-2 border-emerald-200 shadow-sm">
+                                        {step.num}
+                                    </div>
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                                    {step.title}
+                                </h3>
+                                <p className="text-slate-600 text-lg leading-relaxed">
+                                    {step.desc}
+                                </p>
+                                {i < 2 && (
+                                    <div className="hidden md:block absolute top-8 left-full w-12 text-slate-300 text-3xl flex items-center justify-center">
+                                        →
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Final CTA */}
+            <section className="py-24 sm:py-32 md:py-40 px-4 bg-slate-50">
                 <FadeInUp>
                     <motion.div
-                        className="p-12 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 backdrop-blur-xl border border-teal-500/20 rounded-3xl text-center"
-                        whileHover={{ scale: 1.02, borderColor: 'rgba(249, 115, 22, 0.4)' }}
+                        className="bg-white border-2 border-emerald-200 rounded-3xl p-12 sm:p-16 lg:p-20 shadow-lg max-w-4xl mx-auto text-center"
+                        whileHover={{ scale: 1.02, y: -4 }}
                     >
-                        <h2 className="text-4xl font-bold mb-4">
-                            Ready to earn while you pay?
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+                            Ready to start earning?
                         </h2>
-                        <p className="text-gray-500 text-lg mb-8">
-                            Join thousands earning passive income on their escrow
+                        <p className="text-lg sm:text-xl text-slate-600 mb-10 mx-auto max-w-2xl leading-relaxed">
+                            Join thousands of users generating passive income on escrow. No setup fees, no complications.
                         </p>
                         <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: '0 20px 50px rgba(249, 115, 22, 0.5)' }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => navigate('/client')}
-                            className="px-10 py-5 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl font-bold text-xl shadow-xl shadow-teal-500/40 transition-all"
+                            className="btn btn-primary btn-lg"
                         >
-                            Get Started Free →
+                            Get Started Free
                         </motion.button>
                     </motion.div>
                 </FadeInUp>
             </section>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-white/5 mt-24 py-12">
-                <div className="max-w-7xl mx-auto px-6 text-center text-gray-600">
-                    <p>Built with ❤️ on Stellar Blockchain</p>
-                    <p className="mt-2 text-sm">© 2026 Yieldra. All rights reserved.</p>
+            <footer className="border-t border-slate-200 bg-white py-12">
+                <div className="container-max text-center">
+                    <p className="text-sm text-slate-600">
+                        Built on Stellar Blockchain · © 2026 Yieldra
+                    </p>
                 </div>
             </footer>
         </div>
