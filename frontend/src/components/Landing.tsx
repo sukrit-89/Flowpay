@@ -316,11 +316,29 @@ export default function Landing() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-slate-200 bg-white py-12">
-                <div className="container-max text-center">
-                    <p className="text-sm text-slate-600">
-                        Built on Stellar Blockchain · © 2026 Yieldra
-                    </p>
+            <footer className="border-t border-slate-200 bg-white">
+                <div className="container-max px-4 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 text-slate-800">
+                        <img
+                            src="/yieldra_teal_logo_1769009161049.png"
+                            alt="Yieldra"
+                            className="w-8 h-8 object-contain"
+                        />
+                        <div>
+                            <p className="text-sm font-semibold">Yieldra</p>
+                            <p className="text-xs text-slate-500">Built on Stellar Blockchain</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-6 text-sm text-slate-600">
+                        <a href="#features" className="hover:text-slate-900 transition-colors">Features</a>
+                        <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How it works</a>
+                        <a href="https://github.com/sukrit-89" target="_blank" rel="noreferrer" className="hover:text-slate-900 transition-colors">GitHub</a>
+                    </div>
+
+                    <div className="text-xs text-slate-500 text-center sm:text-right">
+                        © 2026 Yieldra. All rights reserved.
+                    </div>
                 </div>
             </footer>
         </div>
