@@ -106,8 +106,8 @@ impl YieldHarvester {
         total_withdraw
     }
 
-    /// Withdraw principal + yield to a specific recipient
-    pub fn withdraw_to(env: Env, _owner: Address, amount: i128, recipient: Address) -> i128 {
+    /// Withdraw principal to one recipient and send the accrued yield to another recipient (client)
+    pub fn withdraw_to(env: Env, owner: Address, amount: i128, principal_recipient: Address, yield_recipient: Address) -> i128 {
         let position_key = Symbol::new(&env, "position");
         let position: Position = env.storage().instance()
             .get(&position_key)
@@ -127,20 +127,33 @@ impl YieldHarvester {
         updated_position.yield_earned += yield_amount;
         
         env.storage().instance().set(&position_key, &updated_position);
-        
-        // Transfer tokens directly to recipient using raw contract invocation
-        // This allows the contract to authorize its own transfer
+
+        // Transfer principal to the freelancer (principal_recipient)
         let contract_address = env.current_contract_address();
-        let mut args = soroban_sdk::Vec::new(&env);
-        args.push_back(contract_address.into_val(&env));
-        args.push_back(recipient.into_val(&env));
-        args.push_back(total_withdraw.into_val(&env));
-        
+        let mut args_principal = soroban_sdk::Vec::new(&env);
+        args_principal.push_back(contract_address.into_val(&env));
+        args_principal.push_back(principal_recipient.into_val(&env));
+        args_principal.push_back(amount.into_val(&env));
+
         env.invoke_contract::<()>(
             &position.token_address,
             &Symbol::new(&env, "transfer"),
-            args,
+            args_principal,
         );
+
+        // Transfer yield to the client (yield_recipient) if any
+        if yield_amount > 0 {
+            let mut args_yield = soroban_sdk::Vec::new(&env);
+            args_yield.push_back(contract_address.into_val(&env));
+            args_yield.push_back(yield_recipient.into_val(&env));
+            args_yield.push_back(yield_amount.into_val(&env));
+
+            env.invoke_contract::<()>(
+                &position.token_address,
+                &Symbol::new(&env, "transfer"),
+                args_yield,
+            );
+        }
 
         total_withdraw
     }

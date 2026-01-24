@@ -4,6 +4,7 @@ import { useWallet } from '../hooks/useWallet';
 import { useNavigate } from 'react-router-dom';
 import JobCreationModal from './JobCreationModal';
 import Sidebar from './shared/Sidebar';
+import { contracts } from '../lib/config';
 
 interface Job {
     id: string;
@@ -71,6 +72,19 @@ export default function ClientDashboard() {
         { label: 'Completed', value: completedJobs }
     ];
 
+    const handleDeleteJob = (jobId: string, createdAt?: string) => {
+        const storedJobs = localStorage.getItem('yieldra_jobs');
+        const parsed: Job[] = storedJobs ? JSON.parse(storedJobs) : [];
+        const next = parsed.filter(job => !(job.id === jobId || (!!createdAt && job.createdAt === createdAt)));
+        localStorage.setItem('yieldra_jobs', JSON.stringify(next));
+        setJobs(prev => prev.filter(job => !(job.id === jobId || (!!createdAt && job.createdAt === createdAt))));
+    };
+
+    const handleClearJobs = () => {
+        localStorage.removeItem('yieldra_jobs');
+        setJobs([]);
+    };
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'completed':
@@ -96,12 +110,12 @@ export default function ClientDashboard() {
     return (
         <div className="flex min-h-screen bg-slate-50">
             {/* Sidebar - Fixed Width */}
-            <div className="w-64 flex-shrink-0">
+            <div className="flex-shrink-0 w-64 md:w-64 lg:w-72 xl:w-80">
                 <Sidebar userType="client" />
             </div>
 
             {/* Main Content - Takes Remaining Space */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 min-w-0 flex flex-col">
                 {/* Header */}
                 <motion.header
                     initial={{ y: -100, opacity: 0 }}
@@ -112,6 +126,10 @@ export default function ClientDashboard() {
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
                             <p className="text-sm text-slate-600 mt-1">Manage your projects and earnings</p>
+                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 text-xs font-mono">
+                                <span className="font-semibold text-slate-900">Escrow:</span>
+                                <span className="truncate max-w-[220px]" title={contracts.escrowCore}>{contracts.escrowCore}</span>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -163,7 +181,17 @@ export default function ClientDashboard() {
 
                         {/* Jobs Section */}
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900 mb-8">Your Projects</h2>
+                            <div className="flex items-center justify-between mb-8 gap-3">
+                                <h2 className="text-2xl font-bold text-slate-900">Your Projects</h2>
+                                {jobs.length > 0 && (
+                                    <button
+                                        onClick={handleClearJobs}
+                                        className="text-sm font-semibold text-rose-600 hover:text-rose-700"
+                                    >
+                                        Clear All
+                                    </button>
+                                )}
+                            </div>
 
                             {loading ? (
                                 <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
@@ -209,9 +237,20 @@ export default function ClientDashboard() {
                                                         {job.description}
                                                     </p>
                                                 </div>
-                                                <span className={`badge flex-shrink-0 ml-2 ${getStatusColor(job.status)}`}>
-                                                    {job.status.replace('_', ' ')}
-                                                </span>
+                                                <div className="flex flex-col items-end gap-2 ml-2">
+                                                    <span className={`badge flex-shrink-0 ${getStatusColor(job.status)}`}>
+                                                        {job.status.replace('_', ' ')}
+                                                    </span>
+                                                    <button
+                                                        className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteJob(job.id, job.createdAt);
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {/* Progress Bar */}
@@ -255,6 +294,19 @@ export default function ClientDashboard() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-12 border-t border-slate-200 pt-6 text-sm text-slate-600 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                                <span className="font-semibold text-slate-900">Escrow Contract</span>
+                                <div className="font-mono text-xs bg-slate-100 border border-slate-200 rounded px-2 py-1 inline-block mt-1 truncate max-w-[320px]" title={contracts.escrowCore}>
+                                    {contracts.escrowCore}
+                                </div>
+                            </div>
+                            <div className="text-xs text-slate-500">
+                                Funds lock in escrow at job creation and release from escrow when milestones are paid.
+                            </div>
                         </div>
                     </div>
                 </main>

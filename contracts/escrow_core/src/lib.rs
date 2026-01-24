@@ -270,10 +270,16 @@ impl EscrowCore {
         // Withdraw from YieldHarvester and send directly to freelancer
         let yield_harvester = Self::get_yield_harvester(&env);
         let mut args = Vec::new(&env);
-        args.push_back(env.current_contract_address().into_val(&env));
+        // owner (client) initiates withdrawal of their deposit
+        args.push_back(job.client.clone().into_val(&env));
+        // principal amount to pay out for this milestone
         args.push_back(milestone_amount.into_val(&env));
-        args.push_back(job.freelancer.clone().into_val(&env));  // Pass freelancer address
-        let payment_amount = env.invoke_contract::<i128>(
+        // principal recipient: freelancer
+        args.push_back(job.freelancer.clone().into_val(&env));
+        // yield recipient: client
+        args.push_back(job.client.clone().into_val(&env));
+
+        let _total_withdrawn = env.invoke_contract::<i128>(
             &yield_harvester,
             &Symbol::new(&env, "withdraw_to"),
             args,
