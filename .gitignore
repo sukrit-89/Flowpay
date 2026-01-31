@@ -43,3 +43,14 @@ coverage/
 # Misc
 .cache/
 .temp/
+
+# Merge conflict artifacts
+*.resolved
+*.orig
+
+# Duplicate directories (prevent nesting issues)
+flowpay/
+
+# Temporary markdown files
+*.md.tmp
+*.md.bak
